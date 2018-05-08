@@ -20,11 +20,6 @@
 
 #include <rtcm3_messages.h>
 
-void setbitu(uint8_t *buff, uint32_t pos, uint32_t len, uint32_t data);
-void setbitul(uint8_t *buff, uint32_t pos, uint32_t len, uint64_t data);
-void setbits(uint8_t *buff, uint32_t pos, uint32_t len, int32_t data);
-void setbitsl(uint8_t *buff, uint32_t pos, uint32_t len, int64_t data);
-
 uint16_t rtcm3_write_header(const rtcm_obs_header *header,
                             uint8_t num_sats,
                             uint8_t *buff);

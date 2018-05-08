@@ -12,77 +12,8 @@
 
 #include "rtcm_encoder.h"
 #include <math.h>
-#include <rtcm3_messages.h>
-
-/** Set bit field in buffer from an unsigned integer.
- * Packs `len` bits into bit position `pos` from the start of the buffer.
- * Maximum bit field length is 32 bits, i.e. `len <= 32`.
- *
- * \param buff
- * \param pos Position in buffer of start of bit field in bits.
- * \param len Length of bit field in bits.
- * \param data Unsigned integer to be packed into bit field.
- */
-void setbitu(uint8_t *buff, uint32_t pos, uint32_t len, uint32_t data) {
-  uint32_t mask = 1u << (len - 1);
-
-  if (len <= 0 || 32 < len) return;
-
-  for (uint32_t i = pos; i < pos + len; i++, mask >>= 1) {
-    if (data & mask)
-      buff[i / 8] |= 1u << (7 - i % 8);
-    else
-      buff[i / 8] &= ~(1u << (7 - i % 8));
-  }
-}
-
-/** Set bit field in buffer from an unsigned integer.
- * Packs `len` bits into bit position `pos` from the start of the buffer.
- * Maximum bit field length is 32 bits, i.e. `len <= 32`.
- *
- * \param buff
- * \param pos Position in buffer of start of bit field in bits.
- * \param len Length of bit field in bits.
- * \param data Unsigned integer to be packed into bit field.
- */
-void setbitul(uint8_t *buff, uint32_t pos, uint32_t len, uint64_t data) {
-  uint64_t mask = ((uint64_t)1) << (len - 1);
-
-  if (len <= 0 || 64 < len) return;
-
-  for (uint32_t i = pos; i < pos + len; i++, mask >>= 1) {
-    if (data & mask)
-      buff[i / 8] |= ((uint64_t)1) << (7 - i % 8);
-    else
-      buff[i / 8] &= ~(((uint64_t)1) << (7 - i % 8));
-  }
-}
-
-/** Set bit field in buffer from a signed integer.
- * Packs `len` bits into bit position `pos` from the start of the buffer.
- * Maximum bit field length is 32 bits, i.e. `len <= 32`.
- *
- * \param buff
- * \param pos Position in buffer of start of bit field in bits.
- * \param len Length of bit field in bits.
- * \param data Signed integer to be packed into bit field.
- */
-void setbits(uint8_t *buff, uint32_t pos, uint32_t len, int32_t data) {
-  setbitu(buff, pos, len, (uint32_t)data);
-}
-
-/** Set bit field in buffer from a signed integer.
- * Packs `len` bits into bit position `pos` from the start of the buffer.
- * Maximum bit field length is 32 bits, i.e. `len <= 32`.
- *
- * \param buff
- * \param pos Position in buffer of start of bit field in bits.
- * \param len Length of bit field in bits.
- * \param data Signed integer to be packed into bit field.
- */
-void setbitsl(uint8_t *buff, uint32_t pos, uint32_t len, int64_t data) {
-  setbitul(buff, pos, len, (uint64_t)data);
-}
+#include "bits.h"
+#include "rtcm3_messages.h"
 
 /** Convert a lock time in seconds into a RTCMv3 Lock Time Indicator value.
  * See RTCM 10403.1, Table 3.4-2.
