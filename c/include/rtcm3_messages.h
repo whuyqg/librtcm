@@ -19,6 +19,8 @@
 
 typedef enum { L1_FREQ, L2_FREQ, NUM_FREQS } freq_enum;
 
+typedef enum { MSM_UNKNOWN = 0, MSM4, MSM5, MSM7 } msm_enum;
+
 typedef struct {
   uint16_t msg_num; /* Msg Num DF002 uint16 12*/
   uint16_t stn_id;  /* Station Id DF003 uint16 12*/
@@ -28,6 +30,21 @@ typedef struct {
   uint8_t div_free; /* Divergance free flag DF007 bit(1) 1 */
   uint8_t smooth;   /* GPS Smoothing Interval DF008 bit(3) 3 */
 } rtcm_obs_header;
+
+typedef struct {
+  uint16_t msg_num;        /* Msg Num DF002 uint16 12*/
+  uint16_t stn_id;         /* Station Id DF003 uint16 12*/
+  uint32_t tow_ms;         /* System-specific epoch time uint32 30 */
+  uint8_t multiple;        /* Multiple Message Bit DF393 bit(1) 1 */
+  uint8_t reserved;        /* Reserved DF001 bit(7) 7 */
+  uint8_t steering;        /* Clock Steering Indicator DF411 uint2 2 */
+  uint8_t ext_clock;       /* External Clock Indicator DF412 uint2 2 */
+  uint8_t div_free;        /* Divergance free flag DF417 bit(1) 1 */
+  uint8_t smooth;          /* GPS Smoothing Interval DF418 bit(3) 3 */
+  uint64_t satellite_mask; /* GNSS Satellite Mask DF394 bit(64) 64 */
+  uint32_t signal_mask;    /* GNSS Signal Mask DF395 bit(32) 32 */
+  uint64_t cell_mask;      /* GNSS Cell Mask DF396 bit(X) (X<=64) */
+} rtcm_msm_header;
 
 typedef union {
   struct {
@@ -56,9 +73,32 @@ typedef struct {
 } rtcm_sat_data;
 
 typedef struct {
+  uint8_t code;
+  uint8_t sat_info;
+  double rough_pseudorange;
+  double rough_range_rate;
+} rtcm_msm_sat_data;
+
+typedef struct {
+  double pseudorange;
+  double carrier_phase;
+  double lock_time_s;
+  bool hca_indicator;
+  double cnr;
+  flag_bf flags;
+  double range_rate;
+} rtcm_msm_signal_data;
+
+typedef struct {
   rtcm_obs_header header;
   rtcm_sat_data sats[RTCM_MAX_SATS];
 } rtcm_obs_message;
+
+typedef struct {
+  rtcm_msm_header header;
+  rtcm_msm_sat_data sats[RTCM_MAX_SATS];
+  rtcm_msm_signal_data signals[RTCM_MAX_CELLS];
+} rtcm_msm_message;
 
 typedef struct {
   uint16_t stn_id;

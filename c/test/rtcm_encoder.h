@@ -37,5 +37,6 @@ uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t *buff);
 uint16_t rtcm3_encode_1029(const rtcm_msg_1029 *msg_1029, uint8_t *buff);
 uint16_t rtcm3_encode_1033(const rtcm_msg_1033 *msg_1033, uint8_t *buff);
 uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t *buff);
+uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg_1074, uint8_t *buff);
 
 #endif /* LIBRTCM_RTCM_ENCODER_H */

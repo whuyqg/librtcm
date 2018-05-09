@@ -17,6 +17,7 @@
 #include <rtcm3_messages.h>
 #include <stdio.h>
 #include <string.h>
+#include "bits.h"
 #include "rtcm_encoder.h"
 
 int main(void) {
@@ -33,6 +34,7 @@ int main(void) {
   test_rtcm_1029();
   test_rtcm_1033();
   test_rtcm_1230();
+  test_rtcm_msm4();
 }
 
 void test_rtcm_1001(void) {
@@ -258,6 +260,7 @@ void test_rtcm_1004(void) {
   msg1004.sats[2].obs[0].flags.valid_cnr = 0;
   msg1004.sats[2].obs[0].cnr = 50.2;
   msg1004.sats[2].obs[0].flags.valid_cnr = 0;
+  msg1004.sats[2].obs[1] = msg1004.sats[2].obs[0];
   msg1004.sats[2].obs[1].cnr = 54.2;
   msg1004.sats[2].obs[1].flags.valid_cnr = 1;
 
@@ -1148,4 +1151,225 @@ bool msg1230_equals(const rtcm_msg_1230 *lhs, const rtcm_msg_1230 *rhs) {
   }
 
   return true;
+}
+
+bool msg_msm_equals(const rtcm_msm_message *msg_in,
+                    const rtcm_msm_message *msg_out) {
+  if (msg_in->header.msg_num != msg_out->header.msg_num) {
+    printf("msm msg_num not equal\n");
+    return false;
+  }
+  if (msg_in->header.stn_id != msg_out->header.stn_id) {
+    printf("msm stn_id not equal\n");
+    return false;
+  }
+  if (msg_in->header.tow_ms != msg_out->header.tow_ms) {
+    printf("msm tow_ms not equal\n");
+    return false;
+  }
+  if (msg_in->header.div_free != msg_out->header.div_free) {
+    printf("msm div_free not equal\n");
+    return false;
+  }
+  if (msg_in->header.smooth != msg_out->header.smooth) {
+    printf("msm smooth not equal\n");
+    return false;
+  }
+  if (msg_in->header.satellite_mask != msg_out->header.satellite_mask) {
+    printf("msm satellite_mask not equal %lu %lu\n",
+           msg_in->header.satellite_mask,
+           msg_out->header.satellite_mask);
+    return false;
+  }
+  if (msg_in->header.signal_mask != msg_out->header.signal_mask) {
+    printf("msm signal_mask not equal\n");
+    return false;
+  }
+  if (msg_in->header.cell_mask != msg_out->header.cell_mask) {
+    printf("msm cell_mask not equal\n");
+    return false;
+  }
+
+  uint8_t num_sats = count_bits_u64(msg_in->header.satellite_mask, 1);
+  for (uint8_t i = 0; i < num_sats; i++) {
+    if (msg_in->sats[i].code != msg_out->sats[i].code) {
+      printf("msm sats[%d].code not equal\n", i);
+    }
+    if (fabs(msg_in->sats[i].rough_pseudorange -
+             msg_out->sats[i].rough_pseudorange) > 1) {
+      printf("msm sats[%d].rough_pseudorange not equal: %.1f %.1f\n",
+             i,
+             msg_in->sats[i].rough_pseudorange,
+             msg_out->sats[i].rough_pseudorange);
+    }
+    if (msg_in->sats[i].sat_info != msg_out->sats[i].sat_info) {
+      printf("msm sats[%d].sat_info_rate not equal: %u %u\n",
+             i,
+             msg_in->sats[i].sat_info,
+             msg_out->sats[i].sat_info);
+    }
+    if (fabs(msg_in->sats[i].rough_range_rate -
+             msg_out->sats[i].rough_range_rate) > 0) {
+      printf("msm sats[%d].rough_range_rate not equal: %.1f %.1f\n",
+             i,
+             msg_in->sats[i].rough_range_rate,
+             msg_out->sats[i].rough_range_rate);
+    }
+  }
+
+  uint8_t num_cells = count_bits_u64(msg_in->header.cell_mask, 1);
+
+  for (uint8_t i = 0; i < num_cells; i++) {
+    const rtcm_msm_signal_data *in_data = &msg_in->signals[i];
+    const rtcm_msm_signal_data *out_data = &msg_out->signals[i];
+
+    if (in_data->flags.valid_pr != out_data->flags.valid_pr) {
+      printf("msm valid_pr[%d] not equal: %u %u\n",
+             i,
+             in_data->flags.valid_pr,
+             out_data->flags.valid_pr);
+
+      return false;
+    }
+
+    if (in_data->flags.valid_cp != out_data->flags.valid_cp) {
+      printf("msm valid_cp[%d] not equal: %u %u\n",
+             i,
+             in_data->flags.valid_cp,
+             out_data->flags.valid_cp);
+      return false;
+    }
+
+    if (in_data->flags.valid_cnr != out_data->flags.valid_cnr) {
+      printf("msm valid_cnr not equal\n");
+      return false;
+    }
+
+    if (in_data->flags.valid_lock != out_data->flags.valid_lock) {
+      printf("msm valid_lock not equal\n");
+      return false;
+    }
+
+    if (in_data->flags.valid_pr) {
+      if (fabs(in_data->pseudorange - out_data->pseudorange) > 0.018) {
+        printf("msm pseudorange[%u] not equal: %.2f %.2f\n",
+               i,
+               in_data->pseudorange,
+               out_data->pseudorange);
+        return false;
+      }
+    }
+    if (in_data->flags.valid_cp) {
+      if (fabs(in_data->carrier_phase - out_data->carrier_phase) > 0.01) {
+        printf("msm carrier_phase[%u] not equal: %.5f %.5f\n",
+               i,
+               in_data->carrier_phase,
+               out_data->carrier_phase);
+
+        return false;
+      }
+    }
+    if (in_data->flags.valid_cnr) {
+      if (fabs(in_data->cnr - out_data->cnr) > 0.5) {
+        printf(
+            "msm cnr[%u] not equal: %f %f\n", i, in_data->cnr, out_data->cnr);
+        return false;
+      }
+    }
+
+    if (in_data->flags.valid_lock) {
+      if (in_data->lock_time_s > out_data->lock_time_s) {
+        printf("msm lock not equal: %.1f %.1f\n",
+               in_data->lock_time_s,
+               out_data->lock_time_s);
+        return false;
+      }
+      if (in_data->lock_time_s < 524.288 &&
+          in_data->lock_time_s < 0.5 * out_data->lock_time_s) {
+        printf("msm lock not equal: %.1f %.1f\n",
+               in_data->lock_time_s,
+               out_data->lock_time_s);
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+void test_rtcm_msm4(void) {
+  rtcm_msm_header header;
+  header.msg_num = 1074;
+  header.stn_id = 7;
+  header.tow_ms = 309000000;
+  header.multiple = 0;
+  header.steering = 0;
+  header.ext_clock = 0;
+  header.div_free = 0;
+  header.smooth = 0;
+  /* PRNs 1, 2 and 3 */
+  header.satellite_mask = (1 << 0) | (1 << 1) | (1 << 2);
+  /* signal ids 2 (L1CA) and 15 (L2CM) */
+  header.signal_mask = (1 << 1) | (1 << 14);
+  /* each of the 3 sats transmit each of the 2 signals */
+  header.cell_mask =
+      (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+
+  rtcm_msm_message msg_msm4;
+  memset((void *)&msg_msm4, 0, sizeof(msg_msm4));
+  msg_msm4.header = header;
+  msg_msm4.sats[0].code = 0;
+  msg_msm4.sats[0].rough_pseudorange =
+      round(20000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm4.signals[0].pseudorange = 20000004.4;
+  msg_msm4.signals[0].carrier_phase = 105100794.4;
+  msg_msm4.signals[0].lock_time_s = 900;
+  msg_msm4.signals[0].flags.valid_pr = 1;
+  msg_msm4.signals[0].flags.valid_cp = 1;
+  msg_msm4.signals[0].flags.valid_lock = 1;
+  msg_msm4.signals[0].cnr = 34;
+  msg_msm4.signals[0].flags.valid_cnr = 1;
+  msg_msm4.signals[1] = msg_msm4.signals[0];
+  msg_msm4.signals[1].pseudorange = 20000124.4;
+  msg_msm4.signals[1].carrier_phase = 81897184.4;
+  msg_msm4.signals[1].cnr = 35;
+
+  msg_msm4.sats[1].code = 0;
+  msg_msm4.sats[1].rough_pseudorange =
+      round(22000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm4.signals[2].pseudorange = 22000004.4;
+  msg_msm4.signals[2].carrier_phase = 115610703.4;
+  msg_msm4.signals[2].lock_time_s = 254;
+  msg_msm4.signals[2].flags.valid_pr = 1;
+  msg_msm4.signals[2].flags.valid_cp = 1;
+  msg_msm4.signals[2].flags.valid_lock = 1;
+  msg_msm4.signals[2].cnr = 50.2;
+  msg_msm4.signals[2].flags.valid_cnr = 1;
+  msg_msm4.signals[3] = msg_msm4.signals[2];
+  msg_msm4.signals[3].pseudorange = 22000024.4;
+  msg_msm4.signals[3].carrier_phase = 90086422.236;
+
+  msg_msm4.sats[2].code = 0;
+  msg_msm4.sats[2].rough_pseudorange =
+      round(22000004.55 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm4.signals[4].pseudorange = 22000004.55;
+  msg_msm4.signals[4].carrier_phase = 115610553.4;
+  msg_msm4.signals[4].lock_time_s = 254;
+  msg_msm4.signals[4].flags.valid_pr = 1;
+  msg_msm4.signals[4].flags.valid_cp = 0;
+  msg_msm4.signals[4].flags.valid_lock = 1;
+  msg_msm4.signals[4].cnr = 50.2;
+  msg_msm4.signals[4].flags.valid_cnr = 0;
+  msg_msm4.signals[5] = msg_msm4.signals[4];
+  msg_msm4.signals[5].cnr = 54.2;
+  msg_msm4.signals[5].flags.valid_cnr = 1;
+
+  uint8_t buff[1024];
+  memset(buff, 0, 1024);
+  rtcm3_encode_msm(&msg_msm4, buff);
+
+  rtcm_msm_message msg_msm4_out;
+  int8_t ret = rtcm3_decode_msm(buff, &msg_msm4_out);
+
+  assert(ret == 0 && msg_msm_equals(&msg_msm4, &msg_msm4_out));
 }

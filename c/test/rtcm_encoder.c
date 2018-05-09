@@ -31,6 +31,31 @@ static uint8_t to_lock_ind(uint32_t time) {
   return 127;
 }
 
+/** Convert a lock time in seconds into a 4-bit RTCMv3 Lock Time Indicator value
+ * See RTCM 10403.1, Table 3.5-74.
+ *
+ * \param time Lock time in seconds.
+ * \return Lock Time Indicator value.
+ */
+static uint8_t to_msm_lock_ind(uint32_t time) {
+  if (time < 0.032) return 0;
+  if (time < 0.064) return 1;
+  if (time < 0.128) return 2;
+  if (time < 0.256) return 3;
+  if (time < 0.512) return 4;
+  if (time < 1.024) return 5;
+  if (time < 2.048) return 6;
+  if (time < 4.096) return 7;
+  if (time < 8.192) return 8;
+  if (time < 16.384) return 9;
+  if (time < 32.768) return 10;
+  if (time < 65.536) return 11;
+  if (time < 131.072) return 12;
+  if (time < 262.144) return 13;
+  if (time < 524.288) return 14;
+  return 15;
+}
+
 void encode_basic_freq_data(const rtcm_freq_data *freq_data,
                             const double freq,
                             const double *l1_pr,
@@ -686,6 +711,222 @@ uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t *buff) {
     setbits(buff, bit, 16, bias);
     bit += 16;
   }
+
+  /* Round number of bits up to nearest whole byte. */
+  return (bit + 7) / 8;
+}
+
+uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
+  uint16_t bit = 0;
+  setbitu(buff, bit, 12, header->msg_num);
+  bit += 12;
+  setbitu(buff, bit, 12, header->stn_id);
+  bit += 12;
+  setbitu(buff, bit, 30, header->tow_ms);
+  bit += 30;
+  setbitu(buff, bit, 1, header->multiple);
+  bit += 1;
+  setbitu(buff, bit, 7, header->reserved);
+  bit += 7;
+  setbitu(buff, bit, 2, header->steering);
+  bit += 2;
+  setbitu(buff, bit, 2, header->ext_clock);
+  bit += 2;
+  setbitu(buff, bit, 1, header->div_free);
+  bit += 1;
+  setbitu(buff, bit, 3, header->smooth);
+  bit += 3;
+  setbitul(buff, bit, 64, header->satellite_mask);
+  bit += 64;
+  setbitu(buff, bit, 32, header->signal_mask);
+  bit += 32;
+  setbitul(buff, bit, 64, header->cell_mask);
+  bit += 64;
+  return bit;
+}
+
+void encode_msm_fine_pseudoranges(const uint8_t num_cells,
+                                  const double fine_pr[num_cells],
+                                  const flag_bf flags[num_cells],
+                                  uint8_t *buff,
+                                  uint16_t *bit) {
+  /* DF400 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    if (flags[i].valid_pr) {
+      double fine_pr_ms = fine_pr[i] / PRUNIT_GPS;
+      setbits(buff, *bit, 15, (int16_t)(fine_pr_ms / C_1_2P24));
+    } else {
+      setbits(buff, *bit, 15, MSM_PR_INVALID);
+    }
+    *bit += 15;
+  }
+}
+
+void encode_msm_fine_phaseranges(const uint8_t num_cells,
+                                 const double fine_cp[num_cells],
+                                 const flag_bf flags[num_cells],
+                                 uint8_t *buff,
+                                 uint16_t *bit) {
+  /* DF401 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    if (flags[i].valid_cp) {
+      double fine_carrier_ms = fine_cp[i] / PRUNIT_GPS;
+      setbits(buff, *bit, 22, (int32_t)(fine_carrier_ms / C_1_2P29));
+    } else {
+      setbits(buff, *bit, 22, (int32_t)MSM_CP_INVALID);
+    }
+    *bit += 22;
+  }
+}
+
+void encode_msm_lock_times(const uint8_t num_cells,
+                           const uint32_t lock_time[num_cells],
+                           const flag_bf flags[num_cells],
+                           uint8_t *buff,
+                           uint16_t *bit) {
+  /* DF402 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    if (flags[i].valid_lock) {
+      setbitu(buff, *bit, 4, to_msm_lock_ind(lock_time[i]));
+    } else {
+      setbitu(buff, *bit, 4, 0);
+    }
+    *bit += 4;
+  }
+}
+
+void encode_msm_hca_indicators(const uint8_t num_cells,
+                               const bool hca_indicator[num_cells],
+                               const flag_bf flags[num_cells],
+                               uint8_t *buff,
+                               uint16_t *bit) {
+  /* DF420 */
+  (void)flags;
+  for (uint16_t i = 0; i < num_cells; i++) {
+    setbitu(buff, *bit, 1, hca_indicator[i]);
+    *bit += 1;
+  }
+}
+
+void encode_msm_cnrs(const uint8_t num_cells,
+                     const double cnr[num_cells],
+                     const flag_bf flags[num_cells],
+                     uint8_t *buff,
+                     uint16_t *bit) {
+  /* DF403 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    if (flags[i].valid_lock) {
+      setbitu(buff, *bit, 6, (uint8_t)cnr[i]);
+    } else {
+      setbitu(buff, *bit, 6, 0);
+    }
+    *bit += 6;
+  }
+}
+
+/* Convert message number into MSM message type */
+msm_enum to_msm_type(uint16_t msg_num) {
+  switch (msg_num) {
+    case 1074:
+    case 1084:
+      return MSM4;
+    case 1075:
+    case 1085:
+      return MSM5;
+    case 1077:
+    case 1087:
+      return MSM7;
+    default:
+      return MSM_UNKNOWN;
+  }
+}
+
+/* Encode MSM4 */
+uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
+  const rtcm_msm_header *header = &msg->header;
+
+  msm_enum msm_type = to_msm_type(header->msg_num);
+  if (MSM4 != msm_type) {
+    return 0;
+  }
+
+  uint8_t num_sats = count_bits_u64(header->satellite_mask, 1);
+  uint8_t num_sigs = count_bits_u32(header->signal_mask, 1);
+  uint8_t num_cells = count_bits_u64(header->cell_mask, 1);
+
+  /* Header */
+  uint16_t bit = rtcm3_encode_msm_header(header, buff);
+
+  /* Satellite Data */
+
+  uint8_t integer_ms[num_sats];
+  double range_modulo_ms[num_sats];
+  double rough_range[num_sats];
+
+  /* number of integer milliseconds */
+  for (uint8_t i = 0; i < num_sats; i++) {
+    integer_ms[i] = (uint8_t)(msg->sats[i].rough_pseudorange / PRUNIT_GPS);
+    setbitu(buff, bit, 8, integer_ms[i]);
+    bit += 8;
+  }
+  /* rough range modulo 1 ms */
+  for (uint8_t i = 0; i < num_sats; i++) {
+    double pr = msg->sats[i].rough_pseudorange / PRUNIT_GPS;
+    /* remove integer ms part */
+    range_modulo_ms[i] = pr - integer_ms[i];
+    uint16_t range_modulo_encoded = (uint16_t)round(1024 * range_modulo_ms[i]);
+    setbitu(buff, bit, 10, range_modulo_encoded);
+    bit += 10;
+
+    rough_range[i] =
+        PRUNIT_GPS * (integer_ms[i] + (double)range_modulo_encoded / 1024);
+  }
+
+  /* Signal Data */
+
+  double fine_pr[num_cells];
+  double fine_cp[num_cells];
+  uint32_t lock_time[num_cells];
+  bool hca_indicator[num_cells];
+  double cnr[num_cells];
+  // double phaserangerates[num_cells];
+
+  flag_bf flags[num_cells];
+
+  uint8_t i = 0;
+  for (uint8_t sat = 0; sat < num_sats; sat++) {
+    for (uint8_t sig = 0; sig < num_sigs; sig++) {
+      uint64_t index = (uint64_t)1 << (sat * num_sigs + sig);
+      if (header->cell_mask & index) {
+        flags[i] = msg->signals[i].flags;
+        if (flags[i].valid_pr) {
+          fine_pr[i] = msg->signals[i].pseudorange - rough_range[sat];
+        }
+        if (flags[i].valid_cp) {
+          double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
+          fine_cp[i] = msg->signals[i].carrier_phase * (CLIGHT / freq) -
+                       rough_range[sat];
+        }
+        if (flags[i].valid_lock) {
+          lock_time[i] = msg->signals[i].lock_time_s;
+        }
+        hca_indicator[i] = msg->signals[i].hca_indicator;
+        if (flags[i].valid_cnr) {
+          cnr[i] = msg->signals[i].cnr;
+        }
+        // phaserangerates[i] = msg->signals[i].range_rate;
+        i++;
+      }
+    }
+  }
+
+  encode_msm_fine_pseudoranges(num_cells, fine_pr, flags, buff, &bit);
+  encode_msm_fine_phaseranges(num_cells, fine_cp, flags, buff, &bit);
+  encode_msm_lock_times(num_cells, lock_time, flags, buff, &bit);
+  encode_msm_hca_indicators(num_cells, hca_indicator, flags, buff, &bit);
+  encode_msm_cnrs(num_cells, cnr, flags, buff, &bit);
+  // encode_msm_fine_phaserangerates(num_cells, phaserangerates, flags, buff,
+  // &bit);
 
   /* Round number of bits up to nearest whole byte. */
   return (bit + 7) / 8;

@@ -32,6 +32,15 @@ static uint32_t from_lock_ind(uint8_t lock) {
   return 937;
 }
 
+/* Table 3.5-75 */
+static uint32_t from_msm_lock_ind(uint8_t lock) {
+  if (lock == 0) {
+    return 0;
+  } else {
+    return (32 << lock) / 1000;
+  }
+}
+
 void decode_basic_gps_l1_freq_data(const uint8_t *buff,
                                    uint16_t *bit,
                                    rtcm_freq_data *freq_data,
@@ -125,6 +134,35 @@ uint16_t rtcm3_read_glo_header(const uint8_t *buff, rtcm_obs_header *header) {
   bit += 1;
   header->smooth = getbitu(buff, bit, 3);
   bit += 3;
+  return bit;
+}
+
+uint16_t rtcm3_read_msm_header(const uint8_t *buff, rtcm_msm_header *header) {
+  uint16_t bit = 0;
+  header->msg_num = getbitu(buff, bit, 12);
+  bit += 12;
+  header->stn_id = getbitu(buff, bit, 12);
+  bit += 12;
+  header->tow_ms = getbitu(buff, bit, 30);
+  bit += 30;
+  header->multiple = getbitu(buff, bit, 1);
+  bit += 1;
+  header->reserved = getbitu(buff, bit, 7);
+  bit += 7;
+  header->steering = getbitu(buff, bit, 2);
+  bit += 2;
+  header->ext_clock = getbitu(buff, bit, 2);
+  bit += 2;
+  header->div_free = getbitu(buff, bit, 1);
+  bit += 1;
+  header->smooth = getbitu(buff, bit, 3);
+  bit += 3;
+  header->satellite_mask = getbitu(buff, bit, 64);
+  bit += 64;
+  header->signal_mask = getbitu(buff, bit, 32);
+  bit += 32;
+  header->cell_mask = getbitu(buff, bit, 64);
+  bit += 64;
   return bit;
 }
 
@@ -733,6 +771,161 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   if (msg_1230->fdma_signal_mask & 0x01) {
     msg_1230->L2_P_cpb_meter = getbits(buff, bit, 16) * 0.02;
     bit += 16;
+  }
+
+  return 0;
+}
+
+void decode_msm_rough_pseudoranges(const uint8_t *buff,
+                                   const uint8_t num_sats,
+                                   double rough_pseudorange[num_sats],
+                                   uint16_t *bit) {
+  /* number of integer milliseconds */
+  for (uint8_t i = 0; i < num_sats; i++) {
+    uint32_t range_ms = getbitu(buff, *bit, 8);
+    *bit += 8;
+    /* TODO: handle invalid value */
+    rough_pseudorange[i] = (double)range_ms * PRUNIT_GPS;
+  }
+  /* rough range modulo 1 ms */
+  for (uint8_t i = 0; i < num_sats; i++) {
+    uint32_t rough_pr = getbitu(buff, *bit, 10);
+    *bit += 10;
+    rough_pseudorange[i] += (double)rough_pr / 1024 * PRUNIT_GPS;
+  }
+}
+
+void decode_msm_fine_pseudoranges(const uint8_t *buff,
+                                  const uint8_t num_cells,
+                                  double fine_pr[num_cells],
+                                  flag_bf flags[num_cells],
+                                  uint16_t *bit) {
+  /* DF400 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    int16_t decoded = (int16_t)getbits(buff, *bit, 15);
+    *bit += 15;
+    flags[i].valid_pr = (decoded != MSM_PR_INVALID);
+    fine_pr[i] = (double)decoded * C_1_2P24 * PRUNIT_GPS;
+  }
+}
+
+void decode_msm_fine_phaseranges(const uint8_t *buff,
+                                 const uint8_t num_cells,
+                                 double fine_cp[num_cells],
+                                 flag_bf flags[num_cells],
+                                 uint16_t *bit) {
+  /* DF401 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    int32_t decoded = getbits(buff, *bit, 22);
+    *bit += 22;
+    flags[i].valid_cp = (decoded != MSM_CP_INVALID);
+    fine_cp[i] = (double)decoded * C_1_2P29 * PRUNIT_GPS;
+  }
+}
+
+void decode_msm_lock_times(const uint8_t *buff,
+                           const uint8_t num_cells,
+                           uint32_t lock_time[num_cells],
+                           flag_bf flags[num_cells],
+                           uint16_t *bit) {
+  /* DF402 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    uint32_t lock_ind = getbitu(buff, *bit, 4);
+    *bit += 4;
+    lock_time[i] = from_msm_lock_ind(lock_ind);
+    flags[i].valid_lock = 1;
+  }
+}
+
+void decode_msm_hca_indicators(const uint8_t *buff,
+                               const uint8_t num_cells,
+                               bool hca_indicator[num_cells],
+                               flag_bf flags[num_cells],
+                               uint16_t *bit) {
+  /* DF420 */
+  (void)flags;
+  for (uint16_t i = 0; i < num_cells; i++) {
+    hca_indicator[i] = (bool)getbitu(buff, *bit, 1);
+    *bit += 1;
+  }
+}
+
+void decode_msm_cnrs(const uint8_t *buff,
+                     const uint8_t num_cells,
+                     double cnr[num_cells],
+                     flag_bf flags[num_cells],
+                     uint16_t *bit) {
+  /* DF403 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    uint32_t decoded = getbitu(buff, *bit, 6);
+    *bit += 6;
+    flags[i].valid_cnr = (decoded != 0);
+    cnr[i] = (double)decoded;
+  }
+}
+
+/** Decode an RTCMv3 Multi System Message
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return If valid then return 0.
+ *         Returns a negative number if the message is invalid:
+ *          - `-1` : Message type mismatch
+ */
+int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
+  uint16_t bit = 0;
+  bit += rtcm3_read_msm_header(buff, &msg->header);
+
+  if (msg->header.msg_num != 1074) {
+    /* Unexpected message type. */
+    return -1;
+  }
+
+  uint8_t num_sats = count_bits_u64(msg->header.satellite_mask, 1);
+  uint8_t num_sigs = count_bits_u32(msg->header.signal_mask, 1);
+  uint8_t num_cells = count_bits_u64(msg->header.cell_mask, 1);
+
+  /* Satellite Data */
+
+  double rough_pseudorange[num_sats];
+  decode_msm_rough_pseudoranges(buff, num_sats, rough_pseudorange, &bit);
+
+  /* Signal Data */
+
+  double fine_pr[num_cells];
+  double phaseranges[num_cells];
+  uint32_t lock_time[num_cells];
+  bool hca_indicator[num_cells];
+  double cnr[num_cells];
+  // double phaserangerates[num_cells];
+  flag_bf flags[num_cells];
+
+  decode_msm_fine_pseudoranges(buff, num_cells, fine_pr, flags, &bit);
+  decode_msm_fine_phaseranges(buff, num_cells, phaseranges, flags, &bit);
+  decode_msm_lock_times(buff, num_cells, lock_time, flags, &bit);
+  decode_msm_hca_indicators(buff, num_cells, hca_indicator, flags, &bit);
+  decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
+  // decode_msm_fine_phaserangerates(buff, num_cells, phaserangerates, flags,
+  // &bit);
+
+  uint8_t i = 0;
+  for (uint8_t sat = 0; sat < num_sats; sat++) {
+    msg->sats[sat].rough_pseudorange = rough_pseudorange[sat];
+    for (uint8_t sig = 0; sig < num_sigs; sig++) {
+      uint64_t index = (uint64_t)1 << (sat * num_sigs + sig);
+      if (msg->header.cell_mask & index) {
+        msg->signals[i].flags = flags[i];
+        msg->signals[i].pseudorange = rough_pseudorange[sat] + fine_pr[i];
+        double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
+        msg->signals[i].carrier_phase =
+            (rough_pseudorange[sat] + phaseranges[i]) * (freq / CLIGHT);
+        msg->signals[i].lock_time_s = lock_time[i];
+        msg->signals[i].hca_indicator = hca_indicator[i];
+        msg->signals[i].cnr = cnr[i];
+        // msg->signals[i].range_rate = phaserangerates[i];
+        i++;
+      }
+    }
   }
 
   return 0;
