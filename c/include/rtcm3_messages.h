@@ -19,7 +19,16 @@
 
 typedef enum { L1_FREQ, L2_FREQ, NUM_FREQS } freq_enum;
 
-typedef enum { MSM_UNKNOWN = 0, MSM4, MSM5, MSM7 } msm_enum;
+typedef enum {
+  MSM_UNKNOWN = 0,
+  MSM1,
+  MSM2,
+  MSM3,
+  MSM4,
+  MSM5,
+  MSM6,
+  MSM7
+} msm_enum;
 
 typedef struct {
   uint16_t msg_num; /* Msg Num DF002 uint16 12*/
@@ -167,5 +176,30 @@ typedef struct {
   double L2_CA_cpb_meter;
   double L2_P_cpb_meter;
 } rtcm_msg_1230;
+
+/* Convert message number into MSM message type */
+static inline msm_enum to_msm_type(uint16_t msg_num) {
+  if (msg_num < 1071 || msg_num > 1127) {
+    return MSM_UNKNOWN;
+  }
+  switch (msg_num % 10) {
+    case 1:
+      return MSM1;
+    case 2:
+      return MSM2;
+    case 3:
+      return MSM3;
+    case 4:
+      return MSM4;
+    case 5:
+      return MSM5;
+    case 6:
+      return MSM6;
+    case 7:
+      return MSM7;
+    default:
+      return MSM_UNKNOWN;
+  }
+}
 
 #endif /* PIKSI_BUILDROOT_RTCM3_MESSAGES_H_H */

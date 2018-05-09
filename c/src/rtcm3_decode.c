@@ -10,13 +10,11 @@
  * WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* pgrgich: need to handle invalid obs... */
-
 #include "rtcm3_decode.h"
 #include <math.h>
 #include "bits.h"
 
-void init_data(rtcm_sat_data *sat_data) {
+void init_sat_data(rtcm_sat_data *sat_data) {
   for (uint8_t freq = 0; freq < NUM_FREQS; ++freq) {
     sat_data->obs[freq].flags.data = 0;
   }
@@ -235,7 +233,7 @@ int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1001->header.n_sat; i++) {
-    init_data(&msg_1001->sats[i]);
+    init_sat_data(&msg_1001->sats[i]);
 
     /* TODO: Handle SBAS prns properly, numbered differently in RTCM? */
     msg_1001->sats[i].svId = getbitu(buff, bit, 6);
@@ -272,7 +270,7 @@ int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1002->header.n_sat; i++) {
-    init_data(&msg_1002->sats[i]);
+    init_sat_data(&msg_1002->sats[i]);
 
     /* TODO: Handle SBAS prns properly, numbered differently in RTCM? */
     msg_1002->sats[i].svId = getbitu(buff, bit, 6);
@@ -313,7 +311,7 @@ int8_t rtcm3_decode_1003(const uint8_t *buff, rtcm_obs_message *msg_1003) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1003->header.n_sat; i++) {
-    init_data(&msg_1003->sats[i]);
+    init_sat_data(&msg_1003->sats[i]);
 
     /* TODO: Handle SBAS prns properly, numbered differently in RTCM? */
     msg_1003->sats[i].svId = getbitu(buff, bit, 6);
@@ -360,7 +358,7 @@ int8_t rtcm3_decode_1004(const uint8_t *buff, rtcm_obs_message *msg_1004) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1004->header.n_sat; i++) {
-    init_data(&msg_1004->sats[i]);
+    init_sat_data(&msg_1004->sats[i]);
 
     /* TODO: Handle SBAS prns properly, numbered differently in RTCM? */
     msg_1004->sats[i].svId = getbitu(buff, bit, 6);
@@ -550,7 +548,7 @@ int8_t rtcm3_decode_1010(const uint8_t *buff, rtcm_obs_message *msg_1010) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1010->header.n_sat; i++) {
-    init_data(&msg_1010->sats[i]);
+    init_sat_data(&msg_1010->sats[i]);
 
     msg_1010->sats[i].svId = getbitu(buff, bit, 6);
     bit += 6;
@@ -593,7 +591,7 @@ int8_t rtcm3_decode_1012(const uint8_t *buff, rtcm_obs_message *msg_1012) {
     return -1;
 
   for (uint8_t i = 0; i < msg_1012->header.n_sat; i++) {
-    init_data(&msg_1012->sats[i]);
+    init_sat_data(&msg_1012->sats[i]);
 
     /* TODO: Handle SBAS prns properly, numbered differently in RTCM? */
     msg_1012->sats[i].svId = getbitu(buff, bit, 6);
@@ -776,22 +774,46 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   return 0;
 }
 
-void decode_msm_rough_pseudoranges(const uint8_t *buff,
-                                   const uint8_t num_sats,
-                                   double rough_pseudorange[num_sats],
-                                   uint16_t *bit) {
-  /* number of integer milliseconds */
+void decode_msm_sat_data(const uint8_t *buff,
+                         const uint8_t num_sats,
+                         const msm_enum msm_type,
+                         double rough_pseudorange[num_sats],
+                         double sat_info[num_sats],
+                         double rough_rate[num_sats],
+                         uint16_t *bit) {
+  /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
     uint32_t range_ms = getbitu(buff, *bit, 8);
     *bit += 8;
     /* TODO: handle invalid value */
     rough_pseudorange[i] = (double)range_ms * PRUNIT_GPS;
   }
-  /* rough range modulo 1 ms */
+
+  /* satellite info (constellation-dependent)*/
+  for (uint8_t i = 0; i < num_sats; i++) {
+    if (MSM5 == msm_type || MSM7 == msm_type) {
+      sat_info[i] = getbitu(buff, *bit, 4);
+      *bit += 4;
+    } else {
+      sat_info[i] = 0;
+    }
+  }
+
+  /* rough range modulo 1 ms, DF398 */
   for (uint8_t i = 0; i < num_sats; i++) {
     uint32_t rough_pr = getbitu(buff, *bit, 10);
     *bit += 10;
     rough_pseudorange[i] += (double)rough_pr / 1024 * PRUNIT_GPS;
+  }
+
+  /* range rate, m/s, DF399*/
+  for (uint8_t i = 0; i < num_sats; i++) {
+    if (MSM5 == msm_type) {
+      rough_rate[i] = (double)getbits(buff, *bit, 14);
+      *bit += 14;
+    } else {
+      rough_rate[i] = 0;
+    }
   }
 }
 
@@ -864,6 +886,20 @@ void decode_msm_cnrs(const uint8_t *buff,
   }
 }
 
+void decode_msm_fine_phaserangerates(const uint8_t *buff,
+                                     const uint8_t num_cells,
+                                     double fine_dop[num_cells],
+                                     flag_bf flags[num_cells],
+                                     uint16_t *bit) {
+  /* DF404 */
+  (void)flags;
+  for (uint16_t i = 0; i < num_cells; i++) {
+    int32_t decoded = getbits(buff, *bit, 15);
+    *bit += 15;
+    fine_dop[i] = (double)decoded * 0.0001;
+  }
+}
+
 /** Decode an RTCMv3 Multi System Message
  *
  * \param buff The input data buffer
@@ -876,7 +912,9 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   uint16_t bit = 0;
   bit += rtcm3_read_msm_header(buff, &msg->header);
 
-  if (msg->header.msg_num != 1074) {
+  msm_enum msm_type = to_msm_type(msg->header.msg_num);
+
+  if (msg->header.msg_num != 1074 && msg->header.msg_num != 1075) {
     /* Unexpected message type. */
     return -1;
   }
@@ -888,29 +926,36 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   /* Satellite Data */
 
   double rough_pseudorange[num_sats];
-  decode_msm_rough_pseudoranges(buff, num_sats, rough_pseudorange, &bit);
+  double rough_rate[num_sats];
+  double sat_info[num_sats];
+  decode_msm_sat_data(
+      buff, num_sats, msm_type, rough_pseudorange, sat_info, rough_rate, &bit);
 
   /* Signal Data */
 
   double fine_pr[num_cells];
-  double phaseranges[num_cells];
+  double fine_cp[num_cells];
   uint32_t lock_time[num_cells];
   bool hca_indicator[num_cells];
   double cnr[num_cells];
-  // double phaserangerates[num_cells];
+  double fine_dop[num_cells];
   flag_bf flags[num_cells];
 
   decode_msm_fine_pseudoranges(buff, num_cells, fine_pr, flags, &bit);
-  decode_msm_fine_phaseranges(buff, num_cells, phaseranges, flags, &bit);
+  decode_msm_fine_phaseranges(buff, num_cells, fine_cp, flags, &bit);
   decode_msm_lock_times(buff, num_cells, lock_time, flags, &bit);
   decode_msm_hca_indicators(buff, num_cells, hca_indicator, flags, &bit);
   decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
-  // decode_msm_fine_phaserangerates(buff, num_cells, phaserangerates, flags,
-  // &bit);
+  if (MSM5 == msm_type) {
+    decode_msm_fine_phaserangerates(
+        buff, num_cells, fine_dop, flags, &bit);
+  }
 
   uint8_t i = 0;
   for (uint8_t sat = 0; sat < num_sats; sat++) {
     msg->sats[sat].rough_pseudorange = rough_pseudorange[sat];
+    msg->sats[sat].sat_info = sat_info[sat];
+    msg->sats[sat].rough_range_rate = rough_rate[sat];
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       uint64_t index = (uint64_t)1 << (sat * num_sigs + sig);
       if (msg->header.cell_mask & index) {
@@ -918,11 +963,11 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
         msg->signals[i].pseudorange = rough_pseudorange[sat] + fine_pr[i];
         double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
         msg->signals[i].carrier_phase =
-            (rough_pseudorange[sat] + phaseranges[i]) * (freq / CLIGHT);
+            (rough_pseudorange[sat] + fine_cp[i]) * (freq / CLIGHT);
         msg->signals[i].lock_time_s = lock_time[i];
         msg->signals[i].hca_indicator = hca_indicator[i];
         msg->signals[i].cnr = cnr[i];
-        // msg->signals[i].range_rate = phaserangerates[i];
+        msg->signals[i].range_rate = rough_rate[sat] + fine_dop[i];
         i++;
       }
     }

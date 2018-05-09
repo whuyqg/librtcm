@@ -824,20 +824,18 @@ void encode_msm_cnrs(const uint8_t num_cells,
   }
 }
 
-/* Convert message number into MSM message type */
-msm_enum to_msm_type(uint16_t msg_num) {
-  switch (msg_num) {
-    case 1074:
-    case 1084:
-      return MSM4;
-    case 1075:
-    case 1085:
-      return MSM5;
-    case 1077:
-    case 1087:
-      return MSM7;
-    default:
-      return MSM_UNKNOWN;
+void encode_msm_fine_phaserangerates(const uint8_t num_cells,
+                                     const double fine_dop[num_cells],
+                                     const flag_bf flags[num_cells],
+                                     uint8_t *buff,
+                                     uint16_t *bit) {
+  /* DF404 */
+  (void)flags;
+  for (uint16_t i = 0; i < num_cells; i++) {
+    /* TODO: add flag? */
+    double fine_range_rate = fine_dop[i] / 0.0001;
+    setbits(buff, *bit, 15, (int16_t)(fine_range_rate));
+    *bit += 15;
   }
 }
 
@@ -846,7 +844,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   const rtcm_msm_header *header = &msg->header;
 
   msm_enum msm_type = to_msm_type(header->msg_num);
-  if (MSM4 != msm_type) {
+  if (MSM4 != msm_type && MSM5 != msm_type) {
     return 0;
   }
 
@@ -862,14 +860,23 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   uint8_t integer_ms[num_sats];
   double range_modulo_ms[num_sats];
   double rough_range[num_sats];
+  double rough_rate[num_sats];
 
-  /* number of integer milliseconds */
+  /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
     integer_ms[i] = (uint8_t)(msg->sats[i].rough_pseudorange / PRUNIT_GPS);
     setbitu(buff, bit, 8, integer_ms[i]);
     bit += 8;
   }
-  /* rough range modulo 1 ms */
+
+  if (MSM5 == msm_type || MSM7 == msm_type) {
+    for (uint8_t i = 0; i < num_sats; i++) {
+      setbitu(buff, bit, 4, msg->sats[i].sat_info);
+      bit += 4;
+    }
+  }
+
+  /* rough range modulo 1 ms, DF398 */
   for (uint8_t i = 0; i < num_sats; i++) {
     double pr = msg->sats[i].rough_pseudorange / PRUNIT_GPS;
     /* remove integer ms part */
@@ -882,6 +889,17 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
         PRUNIT_GPS * (integer_ms[i] + (double)range_modulo_encoded / 1024);
   }
 
+  if (MSM5 == msm_type) {
+    for (uint8_t i = 0; i < num_sats; i++) {
+      /* range rate, m/s, DF399*/
+      double range_rate = round(msg->sats[i].rough_range_rate);
+      setbits(buff, bit, 14, (int16_t)range_rate);
+      bit += 14;
+
+      rough_rate[i] = range_rate;
+    }
+  }
+
   /* Signal Data */
 
   double fine_pr[num_cells];
@@ -889,8 +907,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   uint32_t lock_time[num_cells];
   bool hca_indicator[num_cells];
   double cnr[num_cells];
-  // double phaserangerates[num_cells];
-
+  double fine_dop[num_cells];
   flag_bf flags[num_cells];
 
   uint8_t i = 0;
@@ -914,7 +931,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
         if (flags[i].valid_cnr) {
           cnr[i] = msg->signals[i].cnr;
         }
-        // phaserangerates[i] = msg->signals[i].range_rate;
+        fine_dop[i] = msg->signals[i].range_rate - rough_rate[sat];
         i++;
       }
     }
@@ -925,8 +942,9 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   encode_msm_lock_times(num_cells, lock_time, flags, buff, &bit);
   encode_msm_hca_indicators(num_cells, hca_indicator, flags, buff, &bit);
   encode_msm_cnrs(num_cells, cnr, flags, buff, &bit);
-  // encode_msm_fine_phaserangerates(num_cells, phaserangerates, flags, buff,
-  // &bit);
+  if (MSM5 == msm_type) {
+    encode_msm_fine_phaserangerates(num_cells, fine_dop, flags, buff, &bit);
+  }
 
   /* Round number of bits up to nearest whole byte. */
   return (bit + 7) / 8;

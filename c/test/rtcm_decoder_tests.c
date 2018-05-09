@@ -35,6 +35,7 @@ int main(void) {
   test_rtcm_1033();
   test_rtcm_1230();
   test_rtcm_msm4();
+  test_rtcm_msm5();
 }
 
 void test_rtcm_1001(void) {
@@ -1203,7 +1204,7 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
              msg_out->sats[i].rough_pseudorange);
     }
     if (msg_in->sats[i].sat_info != msg_out->sats[i].sat_info) {
-      printf("msm sats[%d].sat_info_rate not equal: %u %u\n",
+      printf("msm sats[%d].sat_info not equal: %u %u\n",
              i,
              msg_in->sats[i].sat_info,
              msg_out->sats[i].sat_info);
@@ -1366,10 +1367,96 @@ void test_rtcm_msm4(void) {
 
   uint8_t buff[1024];
   memset(buff, 0, 1024);
-  rtcm3_encode_msm(&msg_msm4, buff);
+  uint16_t num_bytes = rtcm3_encode_msm(&msg_msm4, buff);
+  assert(num_bytes > 0 && num_bytes < 1024);
 
   rtcm_msm_message msg_msm4_out;
   int8_t ret = rtcm3_decode_msm(buff, &msg_msm4_out);
 
   assert(ret == 0 && msg_msm_equals(&msg_msm4, &msg_msm4_out));
+}
+
+void test_rtcm_msm5(void) {
+  rtcm_msm_header header;
+  header.msg_num = 1075;
+  header.stn_id = 7;
+  header.tow_ms = 309000000;
+  header.multiple = 0;
+  header.steering = 0;
+  header.ext_clock = 0;
+  header.div_free = 0;
+  header.smooth = 0;
+  /* PRNs 1, 2 and 3 */
+  header.satellite_mask = (1 << 0) | (1 << 1) | (1 << 2);
+  /* signal ids 2 (L1CA) and 15 (L2CM) */
+  header.signal_mask = (1 << 1) | (1 << 14);
+  /* each of the 3 sats transmit each of the 2 signals */
+  header.cell_mask =
+      (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+
+  rtcm_msm_message msg_msm5;
+  memset((void *)&msg_msm5, 0, sizeof(msg_msm5));
+  msg_msm5.header = header;
+  msg_msm5.sats[0].code = 0;
+  msg_msm5.sats[0].rough_pseudorange =
+      round(20000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm5.sats[0].rough_range_rate = 1001;
+  msg_msm5.signals[0].pseudorange = 20000004.4;
+  msg_msm5.signals[0].carrier_phase = 105100794.4;
+  msg_msm5.signals[0].range_rate = 1001;
+  msg_msm5.signals[0].lock_time_s = 900;
+  msg_msm5.signals[0].flags.valid_pr = 1;
+  msg_msm5.signals[0].flags.valid_cp = 1;
+  msg_msm5.signals[0].flags.valid_lock = 1;
+  msg_msm5.signals[0].cnr = 34;
+  msg_msm5.signals[0].flags.valid_cnr = 1;
+  msg_msm5.signals[1] = msg_msm5.signals[0];
+  msg_msm5.signals[1].pseudorange = 20000124.4;
+  msg_msm5.signals[1].carrier_phase = 81897184.4;
+  msg_msm5.signals[1].cnr = 35;
+
+  msg_msm5.sats[1].code = 0;
+  msg_msm5.sats[1].rough_pseudorange =
+      round(22000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm5.sats[1].rough_range_rate = -1001;
+  msg_msm5.signals[2].pseudorange = 22000004.4;
+  msg_msm5.signals[2].carrier_phase = 115610703.4;
+  msg_msm5.signals[2].range_rate = -1001.5;
+  msg_msm5.signals[2].lock_time_s = 254;
+  msg_msm5.signals[2].flags.valid_pr = 1;
+  msg_msm5.signals[2].flags.valid_cp = 1;
+  msg_msm5.signals[2].flags.valid_lock = 1;
+  msg_msm5.signals[2].cnr = 50.2;
+  msg_msm5.signals[2].flags.valid_cnr = 1;
+  msg_msm5.signals[3] = msg_msm5.signals[2];
+  msg_msm5.signals[3].pseudorange = 22000024.4;
+  msg_msm5.signals[3].carrier_phase = 90086422.236;
+  msg_msm5.signals[2].range_rate = -1201.5;
+
+  msg_msm5.sats[2].code = 0;
+  msg_msm5.sats[2].rough_pseudorange =
+      round(22000004.55 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
+  msg_msm5.sats[2].rough_range_rate = 550;
+  msg_msm5.signals[4].pseudorange = 22000004.55;
+  msg_msm5.signals[4].carrier_phase = 115610553.4;
+  msg_msm5.signals[4].range_rate = 555;
+  msg_msm5.signals[4].lock_time_s = 254;
+  msg_msm5.signals[4].flags.valid_pr = 1;
+  msg_msm5.signals[4].flags.valid_cp = 0;
+  msg_msm5.signals[4].flags.valid_lock = 1;
+  msg_msm5.signals[4].cnr = 50.2;
+  msg_msm5.signals[4].flags.valid_cnr = 0;
+  msg_msm5.signals[5] = msg_msm5.signals[4];
+  msg_msm5.signals[5].cnr = 54.2;
+  msg_msm5.signals[5].flags.valid_cnr = 1;
+
+  uint8_t buff[1024];
+  memset(buff, 0, 1024);
+  uint16_t num_bytes = rtcm3_encode_msm(&msg_msm5, buff);
+  assert(num_bytes > 0 && num_bytes < 1024);
+
+  rtcm_msm_message msg_msm5_out;
+  int8_t ret = rtcm3_decode_msm(buff, &msg_msm5_out);
+
+  assert(ret == 0 && msg_msm_equals(&msg_msm5, &msg_msm5_out));
 }
