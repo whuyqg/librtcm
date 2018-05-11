@@ -736,12 +736,15 @@ uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
   bit += 1;
   setbitu(buff, bit, 3, header->smooth);
   bit += 3;
-  setbitul(buff, bit, 64, header->satellite_mask);
+  setbitul_le(buff, bit, 64, header->satellite_mask);
   bit += 64;
-  setbitu(buff, bit, 32, header->signal_mask);
+  setbitul_le(buff, bit, 32, header->signal_mask);
   bit += 32;
-  setbitul(buff, bit, 64, header->cell_mask);
-  bit += 64;
+  uint8_t num_sats = count_bits_u64(header->satellite_mask, 1);
+  uint8_t num_sigs = count_bits_u32(header->signal_mask, 1);
+  uint8_t num_cells = num_sats * num_sigs;
+  setbitul_le(buff, bit, num_cells, header->cell_mask);
+  bit += num_cells;
   return bit;
 }
 
@@ -850,7 +853,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   uint8_t num_sats = count_bits_u64(header->satellite_mask, 1);
   uint8_t num_sigs = count_bits_u32(header->signal_mask, 1);
-  uint8_t num_cells = count_bits_u64(header->cell_mask, 1);
+  uint8_t num_cells = num_sats * num_sigs;
 
   /* Header */
   uint16_t bit = rtcm3_encode_msm_header(header, buff);

@@ -155,12 +155,15 @@ uint16_t rtcm3_read_msm_header(const uint8_t *buff, rtcm_msm_header *header) {
   bit += 1;
   header->smooth = getbitu(buff, bit, 3);
   bit += 3;
-  header->satellite_mask = getbitu(buff, bit, 64);
+  header->satellite_mask = getbitul_le(buff, bit, 64);
   bit += 64;
-  header->signal_mask = getbitu(buff, bit, 32);
+  header->signal_mask = getbitul_le(buff, bit, 32);
   bit += 32;
-  header->cell_mask = getbitu(buff, bit, 64);
-  bit += 64;
+  uint8_t num_sats = count_bits_u64(header->satellite_mask, 1);
+  uint8_t num_sigs = count_bits_u32(header->signal_mask, 1);
+  uint8_t num_cells = num_sats * num_sigs;
+  header->cell_mask = getbitul_le(buff, bit, num_cells);
+  bit += num_cells;
   return bit;
 }
 
@@ -921,7 +924,7 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   uint8_t num_sats = count_bits_u64(msg->header.satellite_mask, 1);
   uint8_t num_sigs = count_bits_u32(msg->header.signal_mask, 1);
-  uint8_t num_cells = count_bits_u64(msg->header.cell_mask, 1);
+  uint8_t num_cells = num_sats * num_sigs;
 
   /* Satellite Data */
 
@@ -947,8 +950,7 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   decode_msm_hca_indicators(buff, num_cells, hca_indicator, flags, &bit);
   decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
   if (MSM5 == msm_type) {
-    decode_msm_fine_phaserangerates(
-        buff, num_cells, fine_dop, flags, &bit);
+    decode_msm_fine_phaserangerates(buff, num_cells, fine_dop, flags, &bit);
   }
 
   uint8_t i = 0;
