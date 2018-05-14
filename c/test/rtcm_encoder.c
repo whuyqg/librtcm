@@ -845,11 +845,13 @@ void encode_msm_fine_phaserangerates(const uint8_t num_cells,
                                      uint8_t *buff,
                                      uint16_t *bit) {
   /* DF404 */
-  (void)flags;
   for (uint16_t i = 0; i < num_cells; i++) {
-    /* TODO: add flag? */
-    double fine_range_rate = fine_dop[i] / 0.0001;
-    setbits(buff, *bit, 15, (int16_t)(fine_range_rate));
+    if (flags[i].valid_dop) {
+      double fine_range_rate = fine_dop[i] / 0.0001;
+      setbits(buff, *bit, 15, (int16_t)(fine_range_rate));
+    } else {
+      setbits(buff, *bit, 15, (int32_t)MSM_DOP_INVALID);
+    }
     *bit += 15;
   }
 }

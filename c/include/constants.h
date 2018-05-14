@@ -24,7 +24,7 @@
 #define MSM_ROUGH_RATE_INVALID 0xFFFF2000  /* Unsigned bit pattern 0x2000 */
 #define MSM_PR_INVALID -16384              /* Signed bit pattern 0x4000 */
 #define MSM_CP_INVALID -2097152            /* Signed bit pattern 0x200000 */
-#define MSM_RR_INVALID -16384              /* Signed bit pattern 0x4000 */
+#define MSM_DOP_INVALID -16384             /* Signed bit pattern 0x4000 */
 
 /** 2^-24 */
 #define C_1_2P24 5.960464477539063e-08

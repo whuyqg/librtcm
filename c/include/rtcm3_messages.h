@@ -68,6 +68,7 @@ typedef union {
     uint8_t valid_cp : 1;
     uint8_t valid_cnr : 1;
     uint8_t valid_lock : 1;
+    uint8_t valid_dop : 1;
   };
   uint8_t data;
 } flag_bf;

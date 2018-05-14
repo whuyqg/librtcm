@@ -911,6 +911,7 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
     int32_t decoded = getbits(buff, *bit, 15);
     *bit += 15;
     fine_dop[i] = (double)decoded * 0.0001;
+    flags[i].valid_dop = (decoded != MSM_DOP_INVALID);
   }
 }
 
@@ -965,6 +966,10 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
   if (MSM5 == msm_type) {
     decode_msm_fine_phaserangerates(buff, num_cells, fine_dop, flags, &bit);
+  } else {
+    for (uint8_t i = 0; i < num_cells; i++) {
+      flags[i].valid_dop = 0;
+    }
   }
 
   uint8_t i = 0;

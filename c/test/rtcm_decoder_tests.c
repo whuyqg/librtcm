@@ -1260,6 +1260,11 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
       return false;
     }
 
+    if (in_data->flags.valid_dop != out_data->flags.valid_dop) {
+      printf("msm valid_dop not equal\n");
+      return false;
+    }
+
     if (in_data->flags.valid_pr) {
       if (fabs(in_data->pseudorange_m - out_data->pseudorange_m) > 0.018) {
         printf("msm pseudorange[%u] not equal: %.2f %.2f\n",
@@ -1312,7 +1317,7 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
       }
     }
 
-    if (in_data->range_rate_Hz != 0) {
+    if (in_data->flags.valid_dop) {
       if (fabs(in_data->range_rate_Hz - out_data->range_rate_Hz) > 0.1) {
         printf("msm range_rate[%u] not equal: %f %f\n",
                i,
@@ -1458,6 +1463,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[0].flags.valid_pr = 1;
   msg_msm5.signals[0].flags.valid_cp = 1;
   msg_msm5.signals[0].flags.valid_lock = 1;
+  msg_msm5.signals[0].flags.valid_dop = 1;
   msg_msm5.signals[0].cnr = 34;
   msg_msm5.signals[0].hca_indicator = 1;
   msg_msm5.signals[0].flags.valid_cnr = 1;
@@ -1477,6 +1483,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[2].flags.valid_pr = 1;
   msg_msm5.signals[2].flags.valid_cp = 1;
   msg_msm5.signals[2].flags.valid_lock = 1;
+  msg_msm5.signals[2].flags.valid_dop = 1;
   msg_msm5.signals[2].cnr = 50.2;
   msg_msm5.signals[2].flags.valid_cnr = 1;
   msg_msm5.signals[3] = msg_msm5.signals[2];
@@ -1494,12 +1501,13 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[4].flags.valid_pr = 1;
   msg_msm5.signals[4].flags.valid_cp = 0;
   msg_msm5.signals[4].flags.valid_lock = 1;
+  msg_msm5.signals[4].flags.valid_dop = 1;
   msg_msm5.signals[4].cnr = 50.2;
   msg_msm5.signals[4].flags.valid_cnr = 0;
   msg_msm5.signals[5] = msg_msm5.signals[4];
   msg_msm5.signals[5].cnr = 54.2;
   msg_msm5.signals[5].flags.valid_cnr = 1;
-  msg_msm5.signals[5].range_rate_Hz = 555 * GPS_L2_FREQ / GPS_L1_FREQ;
+  msg_msm5.signals[5].flags.valid_dop = 0;
 
   uint8_t buff[1024];
   memset(buff, 0, 1024);
