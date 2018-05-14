@@ -40,19 +40,25 @@ typedef struct {
   uint8_t smooth;   /* GPS Smoothing Interval DF008 bit(3) 3 */
 } rtcm_obs_header;
 
+#define MSM_SATELLITE_MASK_SIZE 64
+#define MSM_SIGNAL_MASK_SIZE 32
+#define MSM_CELL_MASK_MAX_SIZE 64
 typedef struct {
-  uint16_t msg_num;        /* Msg Num DF002 uint16 12*/
-  uint16_t stn_id;         /* Station Id DF003 uint16 12*/
-  uint32_t tow_ms;         /* System-specific epoch time uint32 30 */
-  uint8_t multiple;        /* Multiple Message Bit DF393 bit(1) 1 */
-  uint8_t reserved;        /* Reserved DF001 bit(7) 7 */
-  uint8_t steering;        /* Clock Steering Indicator DF411 uint2 2 */
-  uint8_t ext_clock;       /* External Clock Indicator DF412 uint2 2 */
-  uint8_t div_free;        /* Divergance free flag DF417 bit(1) 1 */
-  uint8_t smooth;          /* GPS Smoothing Interval DF418 bit(3) 3 */
-  uint64_t satellite_mask; /* GNSS Satellite Mask DF394 bit(64) 64 */
-  uint32_t signal_mask;    /* GNSS Signal Mask DF395 bit(32) 32 */
-  uint64_t cell_mask;      /* GNSS Cell Mask DF396 bit(X) (X<=64) */
+  uint16_t msg_num;  /* Msg Num DF002 uint16 12*/
+  uint16_t stn_id;   /* Station Id DF003 uint16 12*/
+  uint32_t tow_ms;   /* System-specific epoch time uint32 30 */
+  uint8_t multiple;  /* Multiple Message Bit DF393 bit(1) 1 */
+  uint8_t reserved;  /* Reserved DF001 bit(7) 7 */
+  uint8_t steering;  /* Clock Steering Indicator DF411 uint2 2 */
+  uint8_t ext_clock; /* External Clock Indicator DF412 uint2 2 */
+  uint8_t div_free;  /* Divergance free flag DF417 bit(1) 1 */
+  uint8_t smooth;    /* GPS Smoothing Interval DF418 bit(3) 3 */
+  /* GNSS Satellite Mask DF394 bit(64) 64 */
+  bool satellite_mask[MSM_SATELLITE_MASK_SIZE];
+  /* GNSS Signal Mask DF395 bit(32) 32 */
+  bool signal_mask[MSM_SIGNAL_MASK_SIZE];
+  /* GNSS Cell Mask DF396 bit(X) (X<=64) */
+  bool cell_mask[MSM_CELL_MASK_MAX_SIZE];
 } rtcm_msm_header;
 
 typedef union {
@@ -200,6 +206,15 @@ static inline msm_enum to_msm_type(uint16_t msg_num) {
     default:
       return MSM_UNKNOWN;
   }
+}
+
+static inline uint8_t count_mask_bits(uint16_t mask_size,
+                                      const bool mask[mask_size]) {
+  uint8_t ret = 0;
+  for (uint16_t i = 0; i < mask_size; i++) {
+    ret += mask[i];
+  }
+  return ret;
 }
 
 #endif /* PIKSI_BUILDROOT_RTCM3_MESSAGES_H_H */

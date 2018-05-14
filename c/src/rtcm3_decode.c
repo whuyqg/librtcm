@@ -155,15 +155,24 @@ uint16_t rtcm3_read_msm_header(const uint8_t *buff, rtcm_msm_header *header) {
   bit += 1;
   header->smooth = getbitu(buff, bit, 3);
   bit += 3;
-  header->satellite_mask = getbitul_le(buff, bit, 64);
-  bit += 64;
-  header->signal_mask = getbitul_le(buff, bit, 32);
-  bit += 32;
-  uint8_t num_sats = count_bits_u64(header->satellite_mask, 1);
-  uint8_t num_sigs = count_bits_u32(header->signal_mask, 1);
-  uint8_t num_cells = num_sats * num_sigs;
-  header->cell_mask = getbitul_le(buff, bit, num_cells);
-  bit += num_cells;
+
+  for (uint8_t i = 0; i < MSM_SATELLITE_MASK_SIZE; i++) {
+    header->satellite_mask[i] = getbitu(buff, bit, 1);
+    bit++;
+  }
+  for (uint8_t i = 0; i < MSM_SIGNAL_MASK_SIZE; i++) {
+    header->signal_mask[i] = getbitu(buff, bit, 1);
+    bit++;
+  }
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, header->satellite_mask);
+  uint8_t num_sigs = count_mask_bits(MSM_SIGNAL_MASK_SIZE, header->signal_mask);
+  uint8_t cell_mask_size = num_sats * num_sigs;
+
+  for (uint8_t i = 0; i < cell_mask_size; i++) {
+    header->cell_mask[i] = getbitu(buff, bit, 1);
+    bit++;
+  }
   return bit;
 }
 
@@ -922,9 +931,12 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
     return -1;
   }
 
-  uint8_t num_sats = count_bits_u64(msg->header.satellite_mask, 1);
-  uint8_t num_sigs = count_bits_u32(msg->header.signal_mask, 1);
-  uint8_t num_cells = num_sats * num_sigs;
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
+  uint8_t num_sigs =
+      count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg->header.signal_mask);
+  uint8_t cell_mask_size = num_sats * num_sigs;
+  uint8_t num_cells = count_mask_bits(cell_mask_size, msg->header.cell_mask);
 
   /* Satellite Data */
 
@@ -959,8 +971,7 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
     msg->sats[sat].sat_info = sat_info[sat];
     msg->sats[sat].rough_range_rate = rough_rate[sat];
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
-      uint64_t index = (uint64_t)1 << (sat * num_sigs + sig);
-      if (msg->header.cell_mask & index) {
+      if (msg->header.cell_mask[sat * num_sigs + sig]) {
         msg->signals[i].flags = flags[i];
         msg->signals[i].pseudorange = rough_pseudorange[sat] + fine_pr[i];
         double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;

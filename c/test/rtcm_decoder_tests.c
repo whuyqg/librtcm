@@ -1176,22 +1176,33 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
     printf("msm smooth not equal\n");
     return false;
   }
-  if (msg_in->header.satellite_mask != msg_out->header.satellite_mask) {
-    printf("msm satellite_mask not equal %lu %lu\n",
-           msg_in->header.satellite_mask,
-           msg_out->header.satellite_mask);
-    return false;
+  for (uint8_t i = 0; i < MSM_SATELLITE_MASK_SIZE; i++) {
+    if (msg_in->header.satellite_mask[i] != msg_out->header.satellite_mask[i]) {
+      printf("msm satellite_mask[%d] not equal %u %u\n",
+             i,
+             msg_in->header.satellite_mask[i],
+             msg_out->header.satellite_mask[i]);
+      return false;
+    }
   }
-  if (msg_in->header.signal_mask != msg_out->header.signal_mask) {
-    printf("msm signal_mask not equal\n");
-    return false;
+  for (uint8_t i = 0; i < MSM_SIGNAL_MASK_SIZE; i++) {
+    if (msg_in->header.signal_mask[i] != msg_out->header.signal_mask[i]) {
+      printf("msm signal_mask not equal\n");
+      return false;
+    }
   }
-  if (msg_in->header.cell_mask != msg_out->header.cell_mask) {
-    printf("msm cell_mask not equal\n");
-    return false;
+  for (uint8_t i = 0; i < MSM_CELL_MASK_MAX_SIZE; i++) {
+    if (msg_in->header.cell_mask[i] != msg_out->header.cell_mask[i]) {
+      printf("msm cell_mask[%d] not equal: %u %u\n",
+             i,
+             msg_in->header.cell_mask[i],
+             msg_out->header.cell_mask[i]);
+      return false;
+    }
   }
 
-  uint8_t num_sats = count_bits_u64(msg_in->header.satellite_mask, 1);
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg_in->header.satellite_mask);
   for (uint8_t i = 0; i < num_sats; i++) {
     if (msg_in->sats[i].code != msg_out->sats[i].code) {
       printf("msm sats[%d].code not equal\n", i);
@@ -1218,7 +1229,8 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
     }
   }
 
-  uint8_t num_cells = count_bits_u64(msg_in->header.cell_mask, 1);
+  uint8_t num_cells =
+      count_mask_bits(MSM_CELL_MASK_MAX_SIZE, msg_in->header.cell_mask);
 
   for (uint8_t i = 0; i < num_cells; i++) {
     const rtcm_msm_signal_data *in_data = &msg_in->signals[i];
@@ -1308,13 +1320,24 @@ void test_rtcm_msm4(void) {
   header.ext_clock = 0;
   header.div_free = 0;
   header.smooth = 0;
+
   /* PRNs 1, 2 and 3 */
-  header.satellite_mask = (1 << 0) | (1 << 1) | (1 << 2);
+  memset((void *)&header.satellite_mask, 0, sizeof(header.satellite_mask));
+  header.satellite_mask[0] = true;
+  header.satellite_mask[1] = true;
+  header.satellite_mask[2] = true;
   /* signal ids 2 (L1CA) and 15 (L2CM) */
-  header.signal_mask = (1 << 1) | (1 << 14);
+  memset((void *)&header.signal_mask, 0, sizeof(header.signal_mask));
+  header.signal_mask[1] = true;
+  header.signal_mask[14] = true;
   /* each of the 3 sats transmit each of the 2 signals */
-  header.cell_mask =
-      (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+  memset((void *)&header.cell_mask, 0, sizeof(header.cell_mask));
+  header.cell_mask[0] = true;
+  header.cell_mask[1] = true;
+  header.cell_mask[2] = true;
+  header.cell_mask[3] = true;
+  header.cell_mask[4] = true;
+  header.cell_mask[5] = true;
 
   rtcm_msm_message msg_msm4;
   memset((void *)&msg_msm4, 0, sizeof(msg_msm4));
@@ -1386,13 +1409,24 @@ void test_rtcm_msm5(void) {
   header.ext_clock = 0;
   header.div_free = 0;
   header.smooth = 0;
+
   /* PRNs 1, 2 and 3 */
-  header.satellite_mask = (1 << 0) | (1 << 1) | (1 << 2);
+  memset((void *)&header.satellite_mask, 0, sizeof(header.satellite_mask));
+  header.satellite_mask[0] = true;
+  header.satellite_mask[1] = true;
+  header.satellite_mask[2] = true;
   /* signal ids 2 (L1CA) and 15 (L2CM) */
-  header.signal_mask = (1 << 1) | (1 << 14);
+  memset((void *)&header.signal_mask, 0, sizeof(header.signal_mask));
+  header.signal_mask[1] = true;
+  header.signal_mask[14] = true;
   /* each of the 3 sats transmit each of the 2 signals */
-  header.cell_mask =
-      (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
+  memset((void *)&header.cell_mask, 0, sizeof(header.cell_mask));
+  header.cell_mask[0] = true;
+  header.cell_mask[1] = true;
+  header.cell_mask[2] = true;
+  header.cell_mask[3] = true;
+  header.cell_mask[4] = true;
+  header.cell_mask[5] = true;
 
   rtcm_msm_message msg_msm5;
   memset((void *)&msg_msm5, 0, sizeof(msg_msm5));
