@@ -1309,7 +1309,8 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
         return false;
       }
       if (in_data->lock_time_s < 524.288 &&
-          in_data->lock_time_s < 0.5 * out_data->lock_time_s) {
+          fabs(in_data->lock_time_s - out_data->lock_time_s) >
+              0.05 * in_data->lock_time_s) {
         printf("msm lock not equal: %.1f %.1f\n",
                in_data->lock_time_s,
                out_data->lock_time_s);
