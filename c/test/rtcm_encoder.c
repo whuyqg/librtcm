@@ -37,7 +37,7 @@ static uint8_t to_lock_ind(uint32_t time) {
  * \param time Lock time in seconds.
  * \return Lock Time Indicator value.
  */
-static uint8_t to_msm_lock_ind(uint32_t time) {
+static uint8_t to_msm_lock_ind(double time) {
   if (time < 0.032) return 0;
   if (time < 0.064) return 1;
   if (time < 0.128) return 2;
@@ -795,7 +795,7 @@ void encode_msm_fine_phaseranges(const uint8_t num_cells,
 }
 
 void encode_msm_lock_times(const uint8_t num_cells,
-                           const uint32_t lock_time[num_cells],
+                           const double lock_time[num_cells],
                            const flag_bf flags[num_cells],
                            uint8_t *buff,
                            uint16_t *bit) {
@@ -923,7 +923,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   double fine_pr[num_cells];
   double fine_cp[num_cells];
-  uint32_t lock_time[num_cells];
+  double lock_time[num_cells];
   bool hca_indicator[num_cells];
   double cnr[num_cells];
   double fine_dop[num_cells];

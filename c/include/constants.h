@@ -23,9 +23,13 @@
 #define MSM_ROUGH_RANGE_INVALID 0xFFFFFFFF /* Unsigned bit pattern 0xFF */
 #define MSM_ROUGH_RATE_INVALID 0xFFFF2000  /* Unsigned bit pattern 0x2000 */
 #define MSM_PR_INVALID -16384              /* Signed bit pattern 0x4000 */
+#define MSM_PR_EXT_INVALID -8388608        /* Signed bit pattern 0x800000 */
 #define MSM_CP_INVALID -2097152            /* Signed bit pattern 0x200000 */
+#define MSM_CP_EXT_INVALID -134217728      /* Signed bit pattern 0x8000000 */
 #define MSM_DOP_INVALID -16384             /* Signed bit pattern 0x4000 */
 
+/** 2^-4 */
+#define C_1_2P4 0.0625
 /** 2^-24 */
 #define C_1_2P24 5.960464477539063e-08
 /** 2^-29 */

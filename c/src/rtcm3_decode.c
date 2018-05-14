@@ -30,13 +30,39 @@ static uint32_t from_lock_ind(uint8_t lock) {
   return 937;
 }
 
-/* Table 3.5-75 */
+/* Table 3.5-74 */
 static uint32_t from_msm_lock_ind(uint8_t lock) {
   if (lock == 0) {
     return 0;
   } else {
-    return (32 << lock) / 1000;
+    return 32 << lock;
   }
+}
+
+/* Table 3.5-75 */
+static uint32_t from_msm_lock_ind_ext(uint16_t lock) {
+  if (lock < 64) return lock;
+  if (lock < 96) return 2 * lock - 64;
+  if (lock < 128) return 4 * lock - 256;
+  if (lock < 160) return 8 * lock - 768;
+  if (lock < 192) return 16 * lock - 2048;
+  if (lock < 224) return 32 * lock - 5120;
+  if (lock < 256) return 64 * lock - 12288;
+  if (lock < 288) return 128 * lock - 28672;
+  if (lock < 320) return 256 * lock - 65536;
+  if (lock < 352) return 512 * lock - 147456;
+  if (lock < 384) return 1024 * lock - 327680;
+  if (lock < 416) return 2048 * lock - 720896;
+  if (lock < 448) return 4096 * lock - 1572864;
+  if (lock < 480) return 8192 * lock - 3407872;
+  if (lock < 512) return 16384 * lock - 7340032;
+  if (lock < 544) return 32768 * lock - 15728640;
+  if (lock < 576) return 65536 * lock - 33554432;
+  if (lock < 608) return 131072 * lock - 71303168;
+  if (lock < 640) return 262144 * lock - 150994944;
+  if (lock < 672) return 524288 * lock - 318767104;
+  if (lock < 704) return 1048576 * lock - 671088640;
+  return 671088640;
 }
 
 void decode_basic_gps_l1_freq_data(const uint8_t *buff,
@@ -822,7 +848,7 @@ void decode_msm_sat_data(const uint8_t *buff,
 
   /* range rate, m/s, DF399*/
   for (uint8_t i = 0; i < num_sats; i++) {
-    if (MSM5 == msm_type) {
+    if (MSM5 == msm_type || MSM7 == msm_type) {
       rough_rate[i] = (double)getbits(buff, *bit, 14);
       *bit += 14;
     } else {
@@ -845,6 +871,20 @@ void decode_msm_fine_pseudoranges(const uint8_t *buff,
   }
 }
 
+void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
+                                           const uint8_t num_cells,
+                                           double fine_pr[num_cells],
+                                           flag_bf flags[num_cells],
+                                           uint16_t *bit) {
+  /* DF405 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    int32_t decoded = (int32_t)getbitsl(buff, *bit, 20);
+    *bit += 20;
+    flags[i].valid_pr = (decoded != MSM_PR_EXT_INVALID);
+    fine_pr[i] = (double)decoded * C_1_2P29 * PRUNIT_GPS;
+  }
+}
+
 void decode_msm_fine_phaseranges(const uint8_t *buff,
                                  const uint8_t num_cells,
                                  double fine_cp[num_cells],
@@ -859,16 +899,44 @@ void decode_msm_fine_phaseranges(const uint8_t *buff,
   }
 }
 
+void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
+                                          const uint8_t num_cells,
+                                          double fine_cp[num_cells],
+                                          flag_bf flags[num_cells],
+                                          uint16_t *bit) {
+  /* DF406 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    int32_t decoded = getbits(buff, *bit, 24);
+    *bit += 24;
+    flags[i].valid_cp = (decoded != MSM_CP_EXT_INVALID);
+    fine_cp[i] = (double)decoded * C_1_2P31 * PRUNIT_GPS;
+  }
+}
+
 void decode_msm_lock_times(const uint8_t *buff,
                            const uint8_t num_cells,
-                           uint32_t lock_time[num_cells],
+                           double lock_time[num_cells],
                            flag_bf flags[num_cells],
                            uint16_t *bit) {
   /* DF402 */
   for (uint16_t i = 0; i < num_cells; i++) {
     uint32_t lock_ind = getbitu(buff, *bit, 4);
     *bit += 4;
-    lock_time[i] = from_msm_lock_ind(lock_ind);
+    lock_time[i] = (double)from_msm_lock_ind(lock_ind) / 1000;
+    flags[i].valid_lock = 1;
+  }
+}
+
+void decode_msm_lock_times_extended(const uint8_t *buff,
+                                    const uint8_t num_cells,
+                                    double lock_time[num_cells],
+                                    flag_bf flags[num_cells],
+                                    uint16_t *bit) {
+  /* DF407 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    uint16_t lock_ind = getbitu(buff, *bit, 10);
+    *bit += 10;
+    lock_time[i] = (double)from_msm_lock_ind_ext(lock_ind) / 1000;
     flags[i].valid_lock = 1;
   }
 }
@@ -900,13 +968,26 @@ void decode_msm_cnrs(const uint8_t *buff,
   }
 }
 
+void decode_msm_cnrs_extended(const uint8_t *buff,
+                              const uint8_t num_cells,
+                              double cnr[num_cells],
+                              flag_bf flags[num_cells],
+                              uint16_t *bit) {
+  /* DF408 */
+  for (uint16_t i = 0; i < num_cells; i++) {
+    uint32_t decoded = getbitu(buff, *bit, 10);
+    *bit += 10;
+    flags[i].valid_cnr = (decoded != 0);
+    cnr[i] = (double)decoded * C_1_2P4;
+  }
+}
+
 void decode_msm_fine_phaserangerates(const uint8_t *buff,
                                      const uint8_t num_cells,
                                      double fine_dop[num_cells],
                                      flag_bf flags[num_cells],
                                      uint16_t *bit) {
   /* DF404 */
-  (void)flags;
   for (uint16_t i = 0; i < num_cells; i++) {
     int32_t decoded = getbits(buff, *bit, 15);
     *bit += 15;
@@ -922,6 +1003,7 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
  * \return If valid then return 0.
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
+ *          - `-2` : Cell mask too large
  */
 int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   uint16_t bit = 0;
@@ -929,7 +1011,8 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   msm_enum msm_type = to_msm_type(msg->header.msg_num);
 
-  if (msg->header.msg_num != 1074 && msg->header.msg_num != 1075) {
+  if (msg->header.msg_num != 1074 && msg->header.msg_num != 1075 &&
+      msg->header.msg_num != 1076 && msg->header.msg_num != 1077) {
     /* Unexpected message type. */
     return -1;
   }
@@ -939,6 +1022,12 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   uint8_t num_sigs =
       count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg->header.signal_mask);
   uint8_t cell_mask_size = num_sats * num_sigs;
+
+  if (cell_mask_size > RTCM_MAX_CELLS) {
+    /* Too large cell mask, most probably a parsing error */
+    return -2;
+  }
+
   uint8_t num_cells = count_mask_bits(cell_mask_size, msg->header.cell_mask);
 
   /* Satellite Data */
@@ -953,18 +1042,29 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   double fine_pr[num_cells];
   double fine_cp[num_cells];
-  uint32_t lock_time[num_cells];
+  double lock_time[num_cells];
   bool hca_indicator[num_cells];
   double cnr[num_cells];
   double fine_dop[num_cells];
   flag_bf flags[num_cells];
 
-  decode_msm_fine_pseudoranges(buff, num_cells, fine_pr, flags, &bit);
-  decode_msm_fine_phaseranges(buff, num_cells, fine_cp, flags, &bit);
-  decode_msm_lock_times(buff, num_cells, lock_time, flags, &bit);
+  if (MSM4 == msm_type || MSM5 == msm_type) {
+    decode_msm_fine_pseudoranges(buff, num_cells, fine_pr, flags, &bit);
+    decode_msm_fine_phaseranges(buff, num_cells, fine_cp, flags, &bit);
+    decode_msm_lock_times(buff, num_cells, lock_time, flags, &bit);
+  } else {
+    decode_msm_fine_pseudoranges_extended(
+        buff, num_cells, fine_pr, flags, &bit);
+    decode_msm_fine_phaseranges_extended(buff, num_cells, fine_cp, flags, &bit);
+    decode_msm_lock_times_extended(buff, num_cells, lock_time, flags, &bit);
+  }
   decode_msm_hca_indicators(buff, num_cells, hca_indicator, flags, &bit);
-  decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
-  if (MSM5 == msm_type) {
+  if (MSM4 == msm_type || MSM5 == msm_type) {
+    decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
+  } else {
+    decode_msm_cnrs_extended(buff, num_cells, cnr, flags, &bit);
+  }
+  if (MSM5 == msm_type || MSM7 == msm_type) {
     decode_msm_fine_phaserangerates(buff, num_cells, fine_dop, flags, &bit);
   } else {
     for (uint8_t i = 0; i < num_cells; i++) {
