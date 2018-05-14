@@ -145,6 +145,8 @@ uint16_t rtcm3_read_msm_header(const uint8_t *buff, rtcm_msm_header *header) {
   bit += 30;
   header->multiple = getbitu(buff, bit, 1);
   bit += 1;
+  header->iods = getbitu(buff, bit, 3);
+  bit += 3;
   header->reserved = getbitu(buff, bit, 7);
   bit += 7;
   header->steering = getbitu(buff, bit, 2);

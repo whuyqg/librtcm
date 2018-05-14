@@ -48,6 +48,7 @@ typedef struct {
   uint16_t stn_id;   /* Station Id DF003 uint16 12*/
   uint32_t tow_ms;   /* System-specific epoch time uint32 30 */
   uint8_t multiple;  /* Multiple Message Bit DF393 bit(1) 1 */
+  uint8_t iods;      /* Issue of Data Station DF409 uint8 3 */
   uint8_t reserved;  /* Reserved DF001 bit(7) 7 */
   uint8_t steering;  /* Clock Steering Indicator DF411 uint2 2 */
   uint8_t ext_clock; /* External Clock Indicator DF412 uint2 2 */

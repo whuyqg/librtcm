@@ -726,6 +726,8 @@ uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
   bit += 30;
   setbitu(buff, bit, 1, header->multiple);
   bit += 1;
+  setbitu(buff, bit, 3, header->iods);
+  bit += 3;
   setbitu(buff, bit, 7, header->reserved);
   bit += 7;
   setbitu(buff, bit, 2, header->steering);
