@@ -89,7 +89,6 @@ typedef struct {
 } rtcm_sat_data;
 
 typedef struct {
-  uint8_t code;
   uint8_t sat_info;
   double rough_pseudorange_m;
   double rough_range_rate_m_s;

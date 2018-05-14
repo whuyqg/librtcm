@@ -946,6 +946,8 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
         hca_indicator[i] = msg->signals[i].hca_indicator;
         if (flags[i].valid_cnr) {
           cnr[i] = msg->signals[i].cnr;
+        } else {
+          cnr[i] = 0;
         }
         if (MSM5 == msm_type) {
           fine_dop[i] = msg->signals[i].range_rate_Hz * (CLIGHT / freq) -
