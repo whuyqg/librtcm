@@ -1282,6 +1282,14 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
 
         return false;
       }
+      if (in_data->hca_indicator != out_data->hca_indicator) {
+        printf("msm hca_indicator[%u] not equal: %u %u\n",
+               i,
+               in_data->hca_indicator,
+               out_data->hca_indicator);
+
+        return false;
+      }
     }
     if (in_data->flags.valid_cnr) {
       if (fabs(in_data->cnr - out_data->cnr) > 0.5) {
@@ -1454,6 +1462,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[0].flags.valid_cp = 1;
   msg_msm5.signals[0].flags.valid_lock = 1;
   msg_msm5.signals[0].cnr = 34;
+  msg_msm5.signals[0].hca_indicator = 1;
   msg_msm5.signals[0].flags.valid_cnr = 1;
   msg_msm5.signals[1] = msg_msm5.signals[0];
   msg_msm5.signals[1].pseudorange_m = 20000124.4;
