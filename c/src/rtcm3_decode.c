@@ -1023,7 +1023,7 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
       count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg->header.signal_mask);
   uint8_t cell_mask_size = num_sats * num_sigs;
 
-  if (cell_mask_size > RTCM_MAX_CELLS) {
+  if (cell_mask_size > MSM_MAX_CELLS) {
     /* Too large cell mask, most probably a parsing error */
     return -2;
   }

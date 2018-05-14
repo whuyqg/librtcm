@@ -42,7 +42,6 @@ typedef struct {
 
 #define MSM_SATELLITE_MASK_SIZE 64
 #define MSM_SIGNAL_MASK_SIZE 32
-#define MSM_CELL_MASK_MAX_SIZE 64
 typedef struct {
   uint16_t msg_num;  /* Msg Num DF002 uint16 12*/
   uint16_t stn_id;   /* Station Id DF003 uint16 12*/
@@ -59,7 +58,7 @@ typedef struct {
   /* GNSS Signal Mask DF395 bit(32) 32 */
   bool signal_mask[MSM_SIGNAL_MASK_SIZE];
   /* GNSS Cell Mask DF396 bit(X) (X<=64) */
-  bool cell_mask[MSM_CELL_MASK_MAX_SIZE];
+  bool cell_mask[MSM_MAX_CELLS];
 } rtcm_msm_header;
 
 typedef union {
@@ -113,7 +112,7 @@ typedef struct {
 typedef struct {
   rtcm_msm_header header;
   rtcm_msm_sat_data sats[RTCM_MAX_SATS];
-  rtcm_msm_signal_data signals[RTCM_MAX_CELLS];
+  rtcm_msm_signal_data signals[MSM_MAX_CELLS];
 } rtcm_msm_message;
 
 typedef struct {

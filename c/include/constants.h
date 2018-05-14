@@ -16,10 +16,10 @@
 #define PRUNIT_GPS 299792.458 /**< RTCM v3 Unit of GPS Pseudorange (m) */
 #define PRUNIT_GLO 599584.916 /**< RTCM v3 Unit of GLO Pseudorange (m) */
 #define RTCM_MAX_SATS 32
-#define RTCM_MAX_CELLS 64
-#define CP_INVALID 0xFFF80000              /* Unsigned bit pattern 0x80000 */
-#define PR_L1_INVALID 0xFFF80000           /* Unsigned bit pattern 0x80000 */
-#define PR_L2_INVALID 0xFFFFE000           /* Unsigned bit pattern 0x20000 */
+#define CP_INVALID 0xFFF80000    /* Unsigned bit pattern 0x80000 */
+#define PR_L1_INVALID 0xFFF80000 /* Unsigned bit pattern 0x80000 */
+#define PR_L2_INVALID 0xFFFFE000 /* Unsigned bit pattern 0x20000 */
+#define MSM_MAX_CELLS 64         /* Maximum number of cells in MSM message */
 #define MSM_ROUGH_RANGE_INVALID 0xFFFFFFFF /* Unsigned bit pattern 0xFF */
 #define MSM_ROUGH_RATE_INVALID 0xFFFF2000  /* Unsigned bit pattern 0x2000 */
 #define MSM_PR_INVALID -16384              /* Signed bit pattern 0x4000 */

@@ -1191,7 +1191,7 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
       return false;
     }
   }
-  for (uint8_t i = 0; i < MSM_CELL_MASK_MAX_SIZE; i++) {
+  for (uint8_t i = 0; i < MSM_MAX_CELLS; i++) {
     if (msg_in->header.cell_mask[i] != msg_out->header.cell_mask[i]) {
       printf("msm cell_mask[%d] not equal: %u %u\n",
              i,
@@ -1202,7 +1202,7 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
   }
 
   uint8_t num_sats =
-      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg_in->header.satellite_mask);
+      count_mask_bits(MSM_MAX_CELLS, msg_in->header.satellite_mask);
   for (uint8_t i = 0; i < num_sats; i++) {
     if (fabs(msg_in->sats[i].rough_pseudorange_m -
              msg_out->sats[i].rough_pseudorange_m) > 1) {
@@ -1226,8 +1226,7 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
     }
   }
 
-  uint8_t num_cells =
-      count_mask_bits(MSM_CELL_MASK_MAX_SIZE, msg_in->header.cell_mask);
+  uint8_t num_cells = count_mask_bits(MSM_MAX_CELLS, msg_in->header.cell_mask);
 
   for (uint8_t i = 0; i < num_cells; i++) {
     const rtcm_msm_signal_data *in_data = &msg_in->signals[i];
