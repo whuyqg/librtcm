@@ -876,12 +876,12 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   uint8_t integer_ms[num_sats];
   double range_modulo_ms[num_sats];
-  double rough_range[num_sats];
-  double rough_rate[num_sats];
+  double rough_range_m[num_sats];
+  double rough_rate_m_s[num_sats];
 
   /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
-    integer_ms[i] = (uint8_t)(msg->sats[i].rough_pseudorange / PRUNIT_GPS);
+    integer_ms[i] = (uint8_t)(msg->sats[i].rough_pseudorange_m / PRUNIT_GPS);
     setbitu(buff, bit, 8, integer_ms[i]);
     bit += 8;
   }
@@ -895,25 +895,25 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   /* rough range modulo 1 ms, DF398 */
   for (uint8_t i = 0; i < num_sats; i++) {
-    double pr = msg->sats[i].rough_pseudorange / PRUNIT_GPS;
+    double pr = msg->sats[i].rough_pseudorange_m / PRUNIT_GPS;
     /* remove integer ms part */
     range_modulo_ms[i] = pr - integer_ms[i];
     uint16_t range_modulo_encoded = (uint16_t)round(1024 * range_modulo_ms[i]);
     setbitu(buff, bit, 10, range_modulo_encoded);
     bit += 10;
 
-    rough_range[i] =
+    rough_range_m[i] =
         PRUNIT_GPS * (integer_ms[i] + (double)range_modulo_encoded / 1024);
   }
 
   if (MSM5 == msm_type) {
     for (uint8_t i = 0; i < num_sats; i++) {
       /* range rate, m/s, DF399*/
-      double range_rate = round(msg->sats[i].rough_range_rate);
+      double range_rate = round(msg->sats[i].rough_range_rate_m_s);
       setbits(buff, bit, 14, (int16_t)range_rate);
       bit += 14;
 
-      rough_rate[i] = range_rate;
+      rough_rate_m_s[i] = range_rate;
     }
   }
 
@@ -933,12 +933,12 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
       if (header->cell_mask[sat * num_sigs + sig]) {
         flags[i] = msg->signals[i].flags;
         if (flags[i].valid_pr) {
-          fine_pr[i] = msg->signals[i].pseudorange - rough_range[sat];
+          fine_pr[i] = msg->signals[i].pseudorange_m - rough_range_m[sat];
         }
+        double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
         if (flags[i].valid_cp) {
-          double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
-          fine_cp[i] = msg->signals[i].carrier_phase * (CLIGHT / freq) -
-                       rough_range[sat];
+          fine_cp[i] = msg->signals[i].carrier_phase_cyc * (CLIGHT / freq) -
+                       rough_range_m[sat];
         }
         if (flags[i].valid_lock) {
           lock_time[i] = msg->signals[i].lock_time_s;
@@ -947,7 +947,10 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
         if (flags[i].valid_cnr) {
           cnr[i] = msg->signals[i].cnr;
         }
-        fine_dop[i] = msg->signals[i].range_rate - rough_rate[sat];
+        if (MSM5 == msm_type) {
+          fine_dop[i] = msg->signals[i].range_rate_Hz * (CLIGHT / freq) -
+                        rough_rate_m_s[sat];
+        }
         i++;
       }
     }

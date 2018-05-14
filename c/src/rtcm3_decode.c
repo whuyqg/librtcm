@@ -969,20 +969,23 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   uint8_t i = 0;
   for (uint8_t sat = 0; sat < num_sats; sat++) {
-    msg->sats[sat].rough_pseudorange = rough_pseudorange[sat];
+    msg->sats[sat].rough_pseudorange_m = rough_pseudorange[sat];
     msg->sats[sat].sat_info = sat_info[sat];
-    msg->sats[sat].rough_range_rate = rough_rate[sat];
+    msg->sats[sat].rough_range_rate_m_s = rough_rate[sat];
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       if (msg->header.cell_mask[sat * num_sigs + sig]) {
         msg->signals[i].flags = flags[i];
-        msg->signals[i].pseudorange = rough_pseudorange[sat] + fine_pr[i];
+        msg->signals[i].pseudorange_m = rough_pseudorange[sat] + fine_pr[i];
         double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
-        msg->signals[i].carrier_phase =
+        /* convert carrier phase into cycles */
+        msg->signals[i].carrier_phase_cyc =
             (rough_pseudorange[sat] + fine_cp[i]) * (freq / CLIGHT);
         msg->signals[i].lock_time_s = lock_time[i];
         msg->signals[i].hca_indicator = hca_indicator[i];
         msg->signals[i].cnr = cnr[i];
-        msg->signals[i].range_rate = rough_rate[sat] + fine_dop[i];
+        /* convert Doppler into Hz */
+        msg->signals[i].range_rate_Hz =
+            (rough_rate[sat] + fine_dop[i]) * (freq / CLIGHT);
         i++;
       }
     }

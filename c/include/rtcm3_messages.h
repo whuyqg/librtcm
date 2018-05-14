@@ -91,18 +91,18 @@ typedef struct {
 typedef struct {
   uint8_t code;
   uint8_t sat_info;
-  double rough_pseudorange;
-  double rough_range_rate;
+  double rough_pseudorange_m;
+  double rough_range_rate_m_s;
 } rtcm_msm_sat_data;
 
 typedef struct {
-  double pseudorange;
-  double carrier_phase;
+  double pseudorange_m;
+  double carrier_phase_cyc;
   double lock_time_s;
   bool hca_indicator;
   double cnr;
   flag_bf flags;
-  double range_rate;
+  double range_rate_Hz;
 } rtcm_msm_signal_data;
 
 typedef struct {
