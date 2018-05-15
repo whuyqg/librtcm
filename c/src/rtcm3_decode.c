@@ -816,34 +816,6 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   return 0;
 }
 
-static double msm_signal_frequency(const constellation_t cons,
-                                   const uint8_t signal_index,
-                                   const bool signal_mask[MSM_SIGNAL_MASK_SIZE],
-                                   const uint8_t sat_info) {
-  (void)signal_mask;
-  (void)sat_info;
-
-  /* TODO: constellation support */
-
-  switch (cons) {
-    case CONSTELLATION_GPS:
-      if (signal_index == 0) {
-        return GPS_L1_FREQ;
-      } else {
-        return GPS_L2_FREQ;
-      }
-    case CONSTELLATION_SBAS:
-    case CONSTELLATION_GLO:
-    case CONSTELLATION_BDS2:
-    case CONSTELLATION_QZS:
-    case CONSTELLATION_GAL:
-    case CONSTELLATION_INVALID:
-    case CONSTELLATION_COUNT:
-    default:
-      return 0;
-  }
-}
-
 void decode_msm_sat_data(const uint8_t *buff,
                          const uint8_t num_sats,
                          const msm_enum msm_type,

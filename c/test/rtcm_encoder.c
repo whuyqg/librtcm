@@ -13,7 +13,6 @@
 #include "rtcm_encoder.h"
 #include <math.h>
 #include "bits.h"
-#include "rtcm3_messages.h"
 
 /** Convert a lock time in seconds into a RTCMv3 Lock Time Indicator value.
  * See RTCM 10403.1, Table 3.4-2.
@@ -856,12 +855,19 @@ void encode_msm_fine_phaserangerates(const uint8_t num_cells,
   }
 }
 
-/* Encode MSM4 */
+/* Basic GPS MSM4/5 encoder
+ * returns the number of bytes written */
 uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   const rtcm_msm_header *header = &msg->header;
 
   msm_enum msm_type = to_msm_type(header->msg_num);
   if (MSM4 != msm_type && MSM5 != msm_type) {
+    return 0;
+  }
+
+  constellation_t cons = to_constellation(msg->header.msg_num);
+  if (CONSTELLATION_GPS != cons) {
+    /* Unexpected message type. */
     return 0;
   }
 
@@ -933,11 +939,13 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   for (uint8_t sat = 0; sat < num_sats; sat++) {
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       if (header->cell_mask[sat * num_sigs + sig]) {
+        double freq = msm_signal_frequency(
+            cons, sig, msg->header.signal_mask, msg->sats[sat].sat_info);
+
         flags[i] = msg->signals[i].flags;
         if (flags[i].valid_pr) {
           fine_pr[i] = msg->signals[i].pseudorange_m - rough_range_m[sat];
         }
-        double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
         if (flags[i].valid_cp) {
           fine_cp[i] = msg->signals[i].carrier_phase_cyc * (CLIGHT / freq) -
                        rough_range_m[sat];

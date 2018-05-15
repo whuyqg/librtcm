@@ -14,6 +14,7 @@
 #define SWIFTNAV_RTCM3_DECODE_H
 
 #include "rtcm3_messages.h"
+#include "rtcm3_msm_utils.h"
 
 int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001);
 int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002);
