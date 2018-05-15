@@ -42,6 +42,13 @@ typedef enum constellation_e {
   CONSTELLATION_COUNT,
 } constellation_t;
 
+/* return codes for the decoders */
+typedef enum rtcm3_rc_e {
+  RC_OK = 0,
+  RC_MESSAGE_TYPE_MISMATCH = -1,
+  RC_INVALID_MESSAGE = -2
+} rtcm3_rc_t;
+
 typedef struct {
   uint16_t msg_num; /* Msg Num DF002 uint16 12*/
   uint16_t stn_id;  /* Station Id DF003 uint16 12*/

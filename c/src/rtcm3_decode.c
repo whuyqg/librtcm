@@ -273,7 +273,7 @@ int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001) {
   bit += rtcm3_read_header(buff, &msg_1001->header);
 
   if (msg_1001->header.msg_num != 1001) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1001->header.n_sat; i++) {
     init_sat_data(&msg_1001->sats[i]);
@@ -294,7 +294,7 @@ int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001) {
         construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1002 (Extended L1-Only GPS RTK Observables)
@@ -310,7 +310,7 @@ int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002) {
   bit += rtcm3_read_header(buff, &msg_1002->header);
 
   if (msg_1002->header.msg_num != 1002) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1002->header.n_sat; i++) {
     init_sat_data(&msg_1002->sats[i]);
@@ -335,7 +335,7 @@ int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002) {
         construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1003 (L1/L2 GPS RTK Observables)
@@ -351,7 +351,7 @@ int8_t rtcm3_decode_1003(const uint8_t *buff, rtcm_obs_message *msg_1003) {
   bit += rtcm3_read_header(buff, &msg_1003->header);
 
   if (msg_1003->header.msg_num != 1003) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1003->header.n_sat; i++) {
     init_sat_data(&msg_1003->sats[i]);
@@ -382,7 +382,7 @@ int8_t rtcm3_decode_1003(const uint8_t *buff, rtcm_obs_message *msg_1003) {
         l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_FREQ);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1004 (Extended L1/L2 GPS RTK Observables)
@@ -398,7 +398,7 @@ int8_t rtcm3_decode_1004(const uint8_t *buff, rtcm_obs_message *msg_1004) {
   bit += rtcm3_read_header(buff, &msg_1004->header);
 
   if (msg_1004->header.msg_num != 1004) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1004->header.n_sat; i++) {
     init_sat_data(&msg_1004->sats[i]);
@@ -435,7 +435,7 @@ int8_t rtcm3_decode_1004(const uint8_t *buff, rtcm_obs_message *msg_1004) {
         l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_FREQ);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 int8_t rtcm3_decode_1005_base(const uint8_t *buff,
@@ -466,7 +466,7 @@ int8_t rtcm3_decode_1005_base(const uint8_t *buff,
   msg_1005->arp_z = (double)(getbitsl(buff, *bit, 38)) / 10000.0;
   *bit += 38;
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1005 (Stationary RTK Reference Station ARP)
@@ -483,7 +483,7 @@ int8_t rtcm3_decode_1005(const uint8_t *buff, rtcm_msg_1005 *msg_1005) {
   bit += 12;
 
   if (msg_num != 1005) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   return rtcm3_decode_1005_base(buff, msg_1005, &bit);
 }
@@ -503,12 +503,12 @@ int8_t rtcm3_decode_1006(const uint8_t *buff, rtcm_msg_1006 *msg_1006) {
   bit += 12;
 
   if (msg_num != 1006) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   rtcm3_decode_1005_base(buff, &msg_1006->msg_1005, &bit);
   msg_1006->ant_height = (double)(getbitu(buff, bit, 16)) / 10000.0;
   bit += 16;
-  return 0;
+  return RC_OK;
 }
 
 int8_t rtcm3_decode_1007_base(const uint8_t *buff,
@@ -525,7 +525,7 @@ int8_t rtcm3_decode_1007_base(const uint8_t *buff,
   msg_1007->ant_id = getbitu(buff, *bit, 8);
   *bit += 8;
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1007 (Antenna Descriptor)
@@ -542,11 +542,11 @@ int8_t rtcm3_decode_1007(const uint8_t *buff, rtcm_msg_1007 *msg_1007) {
   bit += 12;
 
   if (msg_num != 1007) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   rtcm3_decode_1007_base(buff, msg_1007, &bit);
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1008 (Antenna Descriptor & Serial Number)
@@ -563,7 +563,7 @@ int8_t rtcm3_decode_1008(const uint8_t *buff, rtcm_msg_1008 *msg_1008) {
   bit += 12;
 
   if (msg_num != 1008) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   rtcm3_decode_1007_base(buff, &msg_1008->msg_1007, &bit);
   msg_1008->serial_count = getbitu(buff, bit, 8);
@@ -572,7 +572,7 @@ int8_t rtcm3_decode_1008(const uint8_t *buff, rtcm_msg_1008 *msg_1008) {
     msg_1008->serial_num[i] = getbitu(buff, bit, 8);
     bit += 8;
   }
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1010 (Extended L1-Only GLO RTK Observables)
@@ -588,7 +588,7 @@ int8_t rtcm3_decode_1010(const uint8_t *buff, rtcm_obs_message *msg_1010) {
   bit += rtcm3_read_glo_header(buff, &msg_1010->header);
 
   if (msg_1010->header.msg_num != 1010) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1010->header.n_sat; i++) {
     init_sat_data(&msg_1010->sats[i]);
@@ -615,7 +615,7 @@ int8_t rtcm3_decode_1010(const uint8_t *buff, rtcm_obs_message *msg_1010) {
         l1_freq_data, phr_pr_diff, GLO_L1_FREQ + glo_fcn * GLO_L1_CH_OFFSET);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1012 (Extended L1/L2 GLO RTK Observables)
@@ -631,7 +631,7 @@ int8_t rtcm3_decode_1012(const uint8_t *buff, rtcm_obs_message *msg_1012) {
   bit += rtcm3_read_glo_header(buff, &msg_1012->header);
 
   if (msg_1012->header.msg_num != 1012) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   for (uint8_t i = 0; i < msg_1012->header.n_sat; i++) {
     init_sat_data(&msg_1012->sats[i]);
@@ -672,7 +672,7 @@ int8_t rtcm3_decode_1012(const uint8_t *buff, rtcm_obs_message *msg_1012) {
                            GLO_L2_FREQ + glo_fcn * GLO_L2_CH_OFFSET);
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1029 (Unicode Text String Message)
@@ -689,7 +689,7 @@ int8_t rtcm3_decode_1029(const uint8_t *buff, rtcm_msg_1029 *msg_1029) {
   bit += 12;
 
   if (msg_num != 1029) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   msg_1029->stn_id = getbitu(buff, bit, 12);
   bit += 12;
@@ -710,7 +710,7 @@ int8_t rtcm3_decode_1029(const uint8_t *buff, rtcm_msg_1029 *msg_1029) {
     bit += 8;
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1033 (Rcv and Ant descriptor)
@@ -727,7 +727,7 @@ int8_t rtcm3_decode_1033(const uint8_t *buff, rtcm_msg_1033 *msg_1033) {
   bit += 12;
 
   if (msg_num != 1033) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   msg_1033->stn_id = getbitu(buff, bit, 12);
   bit += 12;
@@ -770,7 +770,7 @@ int8_t rtcm3_decode_1033(const uint8_t *buff, rtcm_msg_1033 *msg_1033) {
     bit += 8;
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 message type 1230 (Code-Phase Bias Message)
@@ -787,7 +787,7 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   bit += 12;
 
   if (msg_num != 1230) /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
 
   msg_1230->stn_id = getbitu(buff, bit, 12);
   bit += 12;
@@ -814,7 +814,7 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
     bit += 16;
   }
 
-  return 0;
+  return RC_OK;
 }
 
 static void decode_msm_sat_data(const uint8_t *buff,
@@ -1026,13 +1026,13 @@ static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
   if (MSM4 != msm_type && MSM5 != msm_type && MSM6 != msm_type &&
       MSM7 != msm_type) {
     /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 
   constellation_t cons = to_constellation(msg->header.msg_num);
   if (CONSTELLATION_GPS != cons) {
     /* Unexpected message type. */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 
   uint8_t num_sats =
@@ -1043,7 +1043,7 @@ static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
 
   if (cell_mask_size > MSM_MAX_CELLS) {
     /* Too large cell mask, most probably a parsing error */
-    return -2;
+    return RC_INVALID_MESSAGE;
   }
 
   uint8_t num_cells = count_mask_bits(cell_mask_size, msg->header.cell_mask);
@@ -1144,7 +1144,7 @@ static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
     }
   }
 
-  return 0;
+  return RC_OK;
 }
 
 /** Decode an RTCMv3 Multi System Message 4
@@ -1162,7 +1162,7 @@ int8_t rtcm3_decode_msm4(const uint8_t *buff, rtcm_msm_message *msg) {
     return ret;
   } else {
     /* unexpected message type */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 }
 
@@ -1181,7 +1181,7 @@ int8_t rtcm3_decode_msm5(const uint8_t *buff, rtcm_msm_message *msg) {
     return ret;
   } else {
     /* unexpected message type */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 }
 
@@ -1200,7 +1200,7 @@ int8_t rtcm3_decode_msm6(const uint8_t *buff, rtcm_msm_message *msg) {
     return ret;
   } else {
     /* unexpected message type */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 }
 
@@ -1219,6 +1219,6 @@ int8_t rtcm3_decode_msm7(const uint8_t *buff, rtcm_msm_message *msg) {
     return ret;
   } else {
     /* unexpected message type */
-    return -1;
+    return RC_MESSAGE_TYPE_MISMATCH;
   }
 }
