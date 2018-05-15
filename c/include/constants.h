@@ -46,4 +46,11 @@ static const double GLO_L2_FREQ = 1.246e9;       /* GLO L2 Frequency */
 static const double GLO_L1_CH_OFFSET = 0.5625e6; /* GLO L1 Channel offset */
 static const double GLO_L2_CH_OFFSET = 0.4375e6; /* GLO L2 Channel offset */
 
+#define GPS_FIRST_PRN 1
+#define SBAS_FIRST_PRN 120
+#define GLO_FIRST_PRN 1
+#define BDS2_FIRST_PRN 1
+#define GAL_FIRST_PRN 1
+#define QZS_FIRST_PRN 193
+
 #endif /* LIBRTCM_CONSTANTS_H */
