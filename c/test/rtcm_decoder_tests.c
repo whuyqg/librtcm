@@ -1418,7 +1418,7 @@ void test_rtcm_msm4(void) {
   assert(num_bytes > 0 && num_bytes < 1024);
 
   rtcm_msm_message msg_msm4_out;
-  int8_t ret = rtcm3_decode_msm(buff, &msg_msm4_out);
+  int8_t ret = rtcm3_decode_msm4(buff, &msg_msm4_out);
 
   assert(ret == 0 && msg_msm_equals(&msg_msm4, &msg_msm4_out));
 }
@@ -1519,7 +1519,7 @@ void test_rtcm_msm5(void) {
   assert(num_bytes > 0 && num_bytes < 1024);
 
   rtcm_msm_message msg_msm5_out;
-  int8_t ret = rtcm3_decode_msm(buff, &msg_msm5_out);
+  int8_t ret = rtcm3_decode_msm5(buff, &msg_msm5_out);
 
   assert(ret == 0 && msg_msm_equals(&msg_msm5, &msg_msm5_out));
 }

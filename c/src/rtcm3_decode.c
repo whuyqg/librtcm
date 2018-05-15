@@ -1036,7 +1036,7 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
   }
 }
 
-/** Decode an RTCMv3 Multi System Message, types 4 to 7
+/** Decode an RTCMv3 Multi System Messages 4-7
  *
  * \param buff The input data buffer
  * \param RTCM message struct
@@ -1045,7 +1045,7 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
+int8_t rtcm3_decode_msm_internal(const uint8_t *buff, rtcm_msm_message *msg) {
   uint16_t bit = 0;
   bit += rtcm3_read_msm_header(buff, &msg->header);
 
@@ -1173,4 +1173,80 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   }
 
   return 0;
+}
+
+/** Decode an RTCMv3 Multi System Message 4
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return If valid then return 0.
+ *         Returns a negative number if the message is invalid:
+ *          - `-1` : Message type mismatch
+ *          - `-2` : Cell mask too large
+ */
+int8_t rtcm3_decode_msm4(const uint8_t *buff, rtcm_msm_message *msg) {
+  int8_t ret = rtcm3_decode_msm_internal(buff, msg);
+  if (MSM4 == to_msm_type(msg->header.msg_num)) {
+    return ret;
+  } else {
+    /* unexpected message type */
+    return -1;
+  }
+}
+
+/** Decode an RTCMv3 Multi System Message 5
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return If valid then return 0.
+ *         Returns a negative number if the message is invalid:
+ *          - `-1` : Message type mismatch
+ *          - `-2` : Cell mask too large
+ */
+int8_t rtcm3_decode_msm5(const uint8_t *buff, rtcm_msm_message *msg) {
+  int8_t ret = rtcm3_decode_msm_internal(buff, msg);
+  if (MSM5 == to_msm_type(msg->header.msg_num)) {
+    return ret;
+  } else {
+    /* unexpected message type */
+    return -1;
+  }
+}
+
+/** Decode an RTCMv3 Multi System Message 6
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return If valid then return 0.
+ *         Returns a negative number if the message is invalid:
+ *          - `-1` : Message type mismatch
+ *          - `-2` : Cell mask too large
+ */
+int8_t rtcm3_decode_msm6(const uint8_t *buff, rtcm_msm_message *msg) {
+  int8_t ret = rtcm3_decode_msm_internal(buff, msg);
+  if (MSM6 == to_msm_type(msg->header.msg_num)) {
+    return ret;
+  } else {
+    /* unexpected message type */
+    return -1;
+  }
+}
+
+/** Decode an RTCMv3 Multi System Message 7
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return If valid then return 0.
+ *         Returns a negative number if the message is invalid:
+ *          - `-1` : Message type mismatch
+ *          - `-2` : Cell mask too large
+ */
+int8_t rtcm3_decode_msm7(const uint8_t *buff, rtcm_msm_message *msg) {
+  int8_t ret = rtcm3_decode_msm_internal(buff, msg);
+  if (MSM7 == to_msm_type(msg->header.msg_num)) {
+    return ret;
+  } else {
+    /* unexpected message type */
+    return -1;
+  }
 }
