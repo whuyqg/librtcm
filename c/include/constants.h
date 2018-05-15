@@ -25,7 +25,7 @@
 #define MSM_PR_INVALID -16384         /* Signed bit pattern 0x4000 */
 #define MSM_PR_EXT_INVALID -8388608   /* Signed bit pattern 0x800000 */
 #define MSM_CP_INVALID -2097152       /* Signed bit pattern 0x200000 */
-#define MSM_CP_EXT_INVALID -134217728 /* Signed bit pattern 0x8000000 */
+#define MSM_CP_EXT_INVALID -8388608   /* Signed bit pattern 0x800000 */
 #define MSM_DOP_INVALID -16384        /* Signed bit pattern 0x4000 */
 
 /** 2^-4 */
