@@ -31,7 +31,7 @@ static uint32_t from_lock_ind(uint8_t lock) {
 }
 
 /* Returns the lock time in milliseconds */
-/* Table 3.5-74 */
+/* RTCM 10403.3 Table 3.5-74 */
 static uint32_t from_msm_lock_ind(uint8_t lock) {
   if (lock == 0) {
     return 0;
@@ -41,7 +41,7 @@ static uint32_t from_msm_lock_ind(uint8_t lock) {
 }
 
 /* Returns the lock time in milliseconds */
-/* Table 3.5-75 */
+/* RTCM 10403.3 Table 3.5-75 */
 static uint32_t from_msm_lock_ind_ext(uint16_t lock) {
   if (lock < 64) return lock;
   if (lock < 96) return 2 * lock - 64;
@@ -163,7 +163,8 @@ uint16_t rtcm3_read_glo_header(const uint8_t *buff, rtcm_obs_header *header) {
   return bit;
 }
 
-uint16_t rtcm3_read_msm_header(const uint8_t *buff, rtcm_msm_header *header) {
+static uint16_t rtcm3_read_msm_header(const uint8_t *buff,
+                                      rtcm_msm_header *header) {
   uint16_t bit = 0;
   header->msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -816,16 +817,16 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   return 0;
 }
 
-void decode_msm_sat_data(const uint8_t *buff,
-                         const uint8_t num_sats,
-                         const msm_enum msm_type,
-                         double rough_range[num_sats],
-                         bool rough_range_valid[num_sats],
-                         uint8_t sat_info[num_sats],
-                         bool sat_info_valid[num_sats],
-                         double rough_rate[num_sats],
-                         bool rough_rate_valid[num_sats],
-                         uint16_t *bit) {
+static void decode_msm_sat_data(const uint8_t *buff,
+                                const uint8_t num_sats,
+                                const msm_enum msm_type,
+                                double rough_range[],
+                                bool rough_range_valid[],
+                                uint8_t sat_info[],
+                                bool sat_info_valid[],
+                                double rough_rate[],
+                                bool rough_rate_valid[],
+                                uint16_t *bit) {
   /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
     uint32_t range_ms = getbitu(buff, *bit, 8);
@@ -869,11 +870,11 @@ void decode_msm_sat_data(const uint8_t *buff,
   }
 }
 
-void decode_msm_fine_pseudoranges(const uint8_t *buff,
-                                  const uint8_t num_cells,
-                                  double fine_pr[num_cells],
-                                  flag_bf flags[num_cells],
-                                  uint16_t *bit) {
+static void decode_msm_fine_pseudoranges(const uint8_t *buff,
+                                         const uint8_t num_cells,
+                                         double fine_pr[],
+                                         flag_bf flags[],
+                                         uint16_t *bit) {
   /* DF400 */
   for (uint16_t i = 0; i < num_cells; i++) {
     int16_t decoded = (int16_t)getbits(buff, *bit, 15);
@@ -883,11 +884,11 @@ void decode_msm_fine_pseudoranges(const uint8_t *buff,
   }
 }
 
-void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
-                                           const uint8_t num_cells,
-                                           double fine_pr[num_cells],
-                                           flag_bf flags[num_cells],
-                                           uint16_t *bit) {
+static void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
+                                                  const uint8_t num_cells,
+                                                  double fine_pr[],
+                                                  flag_bf flags[],
+                                                  uint16_t *bit) {
   /* DF405 */
   for (uint16_t i = 0; i < num_cells; i++) {
     int32_t decoded = (int32_t)getbitsl(buff, *bit, 20);
@@ -897,11 +898,11 @@ void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
   }
 }
 
-void decode_msm_fine_phaseranges(const uint8_t *buff,
-                                 const uint8_t num_cells,
-                                 double fine_cp[num_cells],
-                                 flag_bf flags[num_cells],
-                                 uint16_t *bit) {
+static void decode_msm_fine_phaseranges(const uint8_t *buff,
+                                        const uint8_t num_cells,
+                                        double fine_cp[],
+                                        flag_bf flags[],
+                                        uint16_t *bit) {
   /* DF401 */
   for (uint16_t i = 0; i < num_cells; i++) {
     int32_t decoded = getbits(buff, *bit, 22);
@@ -911,11 +912,11 @@ void decode_msm_fine_phaseranges(const uint8_t *buff,
   }
 }
 
-void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
-                                          const uint8_t num_cells,
-                                          double fine_cp[num_cells],
-                                          flag_bf flags[num_cells],
-                                          uint16_t *bit) {
+static void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
+                                                 const uint8_t num_cells,
+                                                 double fine_cp[],
+                                                 flag_bf flags[],
+                                                 uint16_t *bit) {
   /* DF406 */
   for (uint16_t i = 0; i < num_cells; i++) {
     int32_t decoded = getbits(buff, *bit, 24);
@@ -925,11 +926,11 @@ void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
   }
 }
 
-void decode_msm_lock_times(const uint8_t *buff,
-                           const uint8_t num_cells,
-                           double lock_time[num_cells],
-                           flag_bf flags[num_cells],
-                           uint16_t *bit) {
+static void decode_msm_lock_times(const uint8_t *buff,
+                                  const uint8_t num_cells,
+                                  double lock_time[],
+                                  flag_bf flags[],
+                                  uint16_t *bit) {
   /* DF402 */
   for (uint16_t i = 0; i < num_cells; i++) {
     uint32_t lock_ind = getbitu(buff, *bit, 4);
@@ -939,11 +940,11 @@ void decode_msm_lock_times(const uint8_t *buff,
   }
 }
 
-void decode_msm_lock_times_extended(const uint8_t *buff,
-                                    const uint8_t num_cells,
-                                    double lock_time[num_cells],
-                                    flag_bf flags[num_cells],
-                                    uint16_t *bit) {
+static void decode_msm_lock_times_extended(const uint8_t *buff,
+                                           const uint8_t num_cells,
+                                           double lock_time[],
+                                           flag_bf flags[],
+                                           uint16_t *bit) {
   /* DF407 */
   for (uint16_t i = 0; i < num_cells; i++) {
     uint16_t lock_ind = getbitu(buff, *bit, 10);
@@ -953,24 +954,22 @@ void decode_msm_lock_times_extended(const uint8_t *buff,
   }
 }
 
-void decode_msm_hca_indicators(const uint8_t *buff,
-                               const uint8_t num_cells,
-                               bool hca_indicator[num_cells],
-                               flag_bf flags[num_cells],
-                               uint16_t *bit) {
+static void decode_msm_hca_indicators(const uint8_t *buff,
+                                      const uint8_t num_cells,
+                                      bool hca_indicator[],
+                                      uint16_t *bit) {
   /* DF420 */
-  (void)flags;
   for (uint16_t i = 0; i < num_cells; i++) {
     hca_indicator[i] = (bool)getbitu(buff, *bit, 1);
     *bit += 1;
   }
 }
 
-void decode_msm_cnrs(const uint8_t *buff,
-                     const uint8_t num_cells,
-                     double cnr[num_cells],
-                     flag_bf flags[num_cells],
-                     uint16_t *bit) {
+static void decode_msm_cnrs(const uint8_t *buff,
+                            const uint8_t num_cells,
+                            double cnr[],
+                            flag_bf flags[],
+                            uint16_t *bit) {
   /* DF403 */
   for (uint16_t i = 0; i < num_cells; i++) {
     uint32_t decoded = getbitu(buff, *bit, 6);
@@ -980,11 +979,11 @@ void decode_msm_cnrs(const uint8_t *buff,
   }
 }
 
-void decode_msm_cnrs_extended(const uint8_t *buff,
-                              const uint8_t num_cells,
-                              double cnr[num_cells],
-                              flag_bf flags[num_cells],
-                              uint16_t *bit) {
+static void decode_msm_cnrs_extended(const uint8_t *buff,
+                                     const uint8_t num_cells,
+                                     double cnr[],
+                                     flag_bf flags[],
+                                     uint16_t *bit) {
   /* DF408 */
   for (uint16_t i = 0; i < num_cells; i++) {
     uint32_t decoded = getbitu(buff, *bit, 10);
@@ -994,11 +993,11 @@ void decode_msm_cnrs_extended(const uint8_t *buff,
   }
 }
 
-void decode_msm_fine_phaserangerates(const uint8_t *buff,
-                                     const uint8_t num_cells,
-                                     double fine_dop[num_cells],
-                                     flag_bf flags[num_cells],
-                                     uint16_t *bit) {
+static void decode_msm_fine_phaserangerates(const uint8_t *buff,
+                                            const uint8_t num_cells,
+                                            double *fine_dop,
+                                            flag_bf *flags,
+                                            uint16_t *bit) {
   /* DF404 */
   for (uint16_t i = 0; i < num_cells; i++) {
     int32_t decoded = getbits(buff, *bit, 15);
@@ -1017,7 +1016,8 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm_internal(const uint8_t *buff, rtcm_msm_message *msg) {
+static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
+                                        rtcm_msm_message *msg) {
   uint16_t bit = 0;
   bit += rtcm3_read_msm_header(buff, &msg->header);
 
@@ -1088,7 +1088,7 @@ int8_t rtcm3_decode_msm_internal(const uint8_t *buff, rtcm_msm_message *msg) {
     decode_msm_fine_phaseranges_extended(buff, num_cells, fine_cp, flags, &bit);
     decode_msm_lock_times_extended(buff, num_cells, lock_time, flags, &bit);
   }
-  decode_msm_hca_indicators(buff, num_cells, hca_indicator, flags, &bit);
+  decode_msm_hca_indicators(buff, num_cells, hca_indicator, &bit);
   if (MSM4 == msm_type || MSM5 == msm_type) {
     decode_msm_cnrs(buff, num_cells, cnr, flags, &bit);
   } else {
@@ -1100,7 +1100,7 @@ int8_t rtcm3_decode_msm_internal(const uint8_t *buff, rtcm_msm_message *msg) {
 
   uint8_t i = 0;
   for (uint8_t sat = 0; sat < num_sats; sat++) {
-    msg->sats[sat].rough_pseudorange_m = rough_range[sat];
+    msg->sats[sat].rough_range_m = rough_range[sat];
     msg->sats[sat].sat_info = sat_info[sat];
     msg->sats[sat].rough_range_rate_m_s = rough_rate[sat];
 

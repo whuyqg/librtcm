@@ -1208,12 +1208,12 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
   }
 
   for (uint8_t i = 0; i < num_sats; i++) {
-    if (fabs(msg_in->sats[i].rough_pseudorange_m -
-             msg_out->sats[i].rough_pseudorange_m) > 1) {
+    if (fabs(msg_in->sats[i].rough_range_m -
+             msg_out->sats[i].rough_range_m) > 1) {
       printf("msm sats[%d].rough_pseudorange not equal: %.1f %.1f\n",
              i,
-             msg_in->sats[i].rough_pseudorange_m,
-             msg_out->sats[i].rough_pseudorange_m);
+             msg_in->sats[i].rough_range_m,
+             msg_out->sats[i].rough_range_m);
     }
     if (msg_in->sats[i].sat_info != msg_out->sats[i].sat_info) {
       printf("msm sats[%d].sat_info not equal: %u %u\n",
@@ -1369,7 +1369,7 @@ void test_rtcm_msm4(void) {
   rtcm_msm_message msg_msm4;
   memset((void *)&msg_msm4, 0, sizeof(msg_msm4));
   msg_msm4.header = header;
-  msg_msm4.sats[0].rough_pseudorange_m =
+  msg_msm4.sats[0].rough_range_m =
       round(20000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm4.signals[0].pseudorange_m = 20000004.4;
   msg_msm4.signals[0].carrier_phase_cyc = 105100794.4;
@@ -1384,7 +1384,7 @@ void test_rtcm_msm4(void) {
   msg_msm4.signals[1].carrier_phase_cyc = 81897184.4;
   msg_msm4.signals[1].cnr = 35;
 
-  msg_msm4.sats[1].rough_pseudorange_m =
+  msg_msm4.sats[1].rough_range_m =
       round(22000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm4.signals[2].pseudorange_m = 22000004.4;
   msg_msm4.signals[2].carrier_phase_cyc = 115610703.4;
@@ -1398,7 +1398,7 @@ void test_rtcm_msm4(void) {
   msg_msm4.signals[3].pseudorange_m = 22000024.4;
   msg_msm4.signals[3].carrier_phase_cyc = 90086422.236;
 
-  msg_msm4.sats[2].rough_pseudorange_m =
+  msg_msm4.sats[2].rough_range_m =
       round(22000004.55 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm4.signals[4].pseudorange_m = 22000004.55;
   msg_msm4.signals[4].carrier_phase_cyc = 115610553.4;
@@ -1457,7 +1457,7 @@ void test_rtcm_msm5(void) {
   rtcm_msm_message msg_msm5;
   memset((void *)&msg_msm5, 0, sizeof(msg_msm5));
   msg_msm5.header = header;
-  msg_msm5.sats[0].rough_pseudorange_m =
+  msg_msm5.sats[0].rough_range_m =
       round(20000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm5.sats[0].rough_range_rate_m_s = round(1001 * (CLIGHT / GPS_L1_FREQ));
   msg_msm5.signals[0].pseudorange_m = 20000004.4;
@@ -1477,7 +1477,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[1].range_rate_Hz = 1001 * GPS_L2_FREQ / GPS_L1_FREQ;
   msg_msm5.signals[1].cnr = 35;
 
-  msg_msm5.sats[1].rough_pseudorange_m =
+  msg_msm5.sats[1].rough_range_m =
       round(22000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm5.sats[1].rough_range_rate_m_s = round(-1001 * (CLIGHT / GPS_L1_FREQ));
   msg_msm5.signals[2].pseudorange_m = 22000004.4;
@@ -1495,7 +1495,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[3].carrier_phase_cyc = 90086422.236;
   msg_msm5.signals[3].range_rate_Hz = -1001.5 * GPS_L2_FREQ / GPS_L1_FREQ;
 
-  msg_msm5.sats[2].rough_pseudorange_m =
+  msg_msm5.sats[2].rough_range_m =
       round(22000004.55 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
   msg_msm5.sats[2].rough_range_rate_m_s = round(550 * (CLIGHT / GPS_L1_FREQ));
   msg_msm5.signals[4].pseudorange_m = 22000004.55;

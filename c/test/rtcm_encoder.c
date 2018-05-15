@@ -715,7 +715,8 @@ uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
+static uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header,
+                                        uint8_t *buff) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, header->msg_num);
   bit += 12;
@@ -738,11 +739,11 @@ uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
   setbitu(buff, bit, 3, header->smooth);
   bit += 3;
 
-  for (uint8_t i = 0; i < 64; i++) {
+  for (uint8_t i = 0; i < MSM_SATELLITE_MASK_SIZE; i++) {
     setbitu(buff, bit, 1, header->satellite_mask[i]);
     bit++;
   }
-  for (uint8_t i = 0; i < 32; i++) {
+  for (uint8_t i = 0; i < MSM_SIGNAL_MASK_SIZE; i++) {
     setbitu(buff, bit, 1, header->signal_mask[i]);
     bit++;
   }
@@ -759,11 +760,11 @@ uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header, uint8_t *buff) {
   return bit;
 }
 
-void encode_msm_fine_pseudoranges(const uint8_t num_cells,
-                                  const double fine_pr[num_cells],
-                                  const flag_bf flags[num_cells],
-                                  uint8_t *buff,
-                                  uint16_t *bit) {
+static void encode_msm_fine_pseudoranges(const uint8_t num_cells,
+                                         const double fine_pr[],
+                                         const flag_bf flags[],
+                                         uint8_t *buff,
+                                         uint16_t *bit) {
   /* DF400 */
   for (uint16_t i = 0; i < num_cells; i++) {
     if (flags[i].valid_pr) {
@@ -776,11 +777,11 @@ void encode_msm_fine_pseudoranges(const uint8_t num_cells,
   }
 }
 
-void encode_msm_fine_phaseranges(const uint8_t num_cells,
-                                 const double fine_cp[num_cells],
-                                 const flag_bf flags[num_cells],
-                                 uint8_t *buff,
-                                 uint16_t *bit) {
+static void encode_msm_fine_phaseranges(const uint8_t num_cells,
+                                        const double fine_cp[],
+                                        const flag_bf flags[],
+                                        uint8_t *buff,
+                                        uint16_t *bit) {
   /* DF401 */
   for (uint16_t i = 0; i < num_cells; i++) {
     if (flags[i].valid_cp) {
@@ -793,11 +794,11 @@ void encode_msm_fine_phaseranges(const uint8_t num_cells,
   }
 }
 
-void encode_msm_lock_times(const uint8_t num_cells,
-                           const double lock_time[num_cells],
-                           const flag_bf flags[num_cells],
-                           uint8_t *buff,
-                           uint16_t *bit) {
+static void encode_msm_lock_times(const uint8_t num_cells,
+                                  const double lock_time[],
+                                  const flag_bf flags[],
+                                  uint8_t *buff,
+                                  uint16_t *bit) {
   /* DF402 */
   for (uint16_t i = 0; i < num_cells; i++) {
     if (flags[i].valid_lock) {
@@ -809,24 +810,22 @@ void encode_msm_lock_times(const uint8_t num_cells,
   }
 }
 
-void encode_msm_hca_indicators(const uint8_t num_cells,
-                               const bool hca_indicator[num_cells],
-                               const flag_bf flags[num_cells],
-                               uint8_t *buff,
-                               uint16_t *bit) {
+static void encode_msm_hca_indicators(const uint8_t num_cells,
+                                      const bool hca_indicator[],
+                                      uint8_t *buff,
+                                      uint16_t *bit) {
   /* DF420 */
-  (void)flags;
   for (uint16_t i = 0; i < num_cells; i++) {
     setbitu(buff, *bit, 1, hca_indicator[i]);
     *bit += 1;
   }
 }
 
-void encode_msm_cnrs(const uint8_t num_cells,
-                     const double cnr[num_cells],
-                     const flag_bf flags[num_cells],
-                     uint8_t *buff,
-                     uint16_t *bit) {
+static void encode_msm_cnrs(const uint8_t num_cells,
+                            const double cnr[],
+                            const flag_bf flags[],
+                            uint8_t *buff,
+                            uint16_t *bit) {
   /* DF403 */
   for (uint16_t i = 0; i < num_cells; i++) {
     if (flags[i].valid_lock) {
@@ -838,11 +837,11 @@ void encode_msm_cnrs(const uint8_t num_cells,
   }
 }
 
-void encode_msm_fine_phaserangerates(const uint8_t num_cells,
-                                     const double fine_dop[num_cells],
-                                     const flag_bf flags[num_cells],
-                                     uint8_t *buff,
-                                     uint16_t *bit) {
+static void encode_msm_fine_phaserangerates(const uint8_t num_cells,
+                                            const double fine_dop[],
+                                            const flag_bf flags[],
+                                            uint8_t *buff,
+                                            uint16_t *bit) {
   /* DF404 */
   for (uint16_t i = 0; i < num_cells; i++) {
     if (flags[i].valid_dop) {
@@ -889,7 +888,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
-    integer_ms[i] = (uint8_t)(msg->sats[i].rough_pseudorange_m / PRUNIT_GPS);
+    integer_ms[i] = (uint8_t)(msg->sats[i].rough_range_m / PRUNIT_GPS);
     setbitu(buff, bit, 8, integer_ms[i]);
     bit += 8;
   }
@@ -903,7 +902,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
 
   /* rough range modulo 1 ms, DF398 */
   for (uint8_t i = 0; i < num_sats; i++) {
-    double pr = msg->sats[i].rough_pseudorange_m / PRUNIT_GPS;
+    double pr = msg->sats[i].rough_range_m / PRUNIT_GPS;
     /* remove integer ms part */
     range_modulo_ms[i] = pr - integer_ms[i];
     uint16_t range_modulo_encoded = (uint16_t)round(1024 * range_modulo_ms[i]);
@@ -971,7 +970,7 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   encode_msm_fine_pseudoranges(num_cells, fine_pr, flags, buff, &bit);
   encode_msm_fine_phaseranges(num_cells, fine_cp, flags, buff, &bit);
   encode_msm_lock_times(num_cells, lock_time, flags, buff, &bit);
-  encode_msm_hca_indicators(num_cells, hca_indicator, flags, buff, &bit);
+  encode_msm_hca_indicators(num_cells, hca_indicator, buff, &bit);
   encode_msm_cnrs(num_cells, cnr, flags, buff, &bit);
   if (MSM5 == msm_type) {
     encode_msm_fine_phaserangerates(num_cells, fine_dop, flags, buff, &bit);
