@@ -30,6 +30,7 @@ static uint32_t from_lock_ind(uint8_t lock) {
   return 937;
 }
 
+/* Returns the lock time in milliseconds */
 /* Table 3.5-74 */
 static uint32_t from_msm_lock_ind(uint8_t lock) {
   if (lock == 0) {
@@ -39,6 +40,7 @@ static uint32_t from_msm_lock_ind(uint8_t lock) {
   }
 }
 
+/* Returns the lock time in milliseconds */
 /* Table 3.5-75 */
 static uint32_t from_msm_lock_ind_ext(uint16_t lock) {
   if (lock < 64) return lock;
@@ -62,7 +64,7 @@ static uint32_t from_msm_lock_ind_ext(uint16_t lock) {
   if (lock < 640) return 262144 * lock - 150994944;
   if (lock < 672) return 524288 * lock - 318767104;
   if (lock < 704) return 1048576 * lock - 671088640;
-  return 671088640;
+  return 67108864;
 }
 
 void decode_basic_gps_l1_freq_data(const uint8_t *buff,
@@ -814,19 +816,50 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   return 0;
 }
 
+static double msm_signal_frequency(const constellation_t cons,
+                                   const uint8_t signal_index,
+                                   const bool signal_mask[MSM_SIGNAL_MASK_SIZE],
+                                   const uint8_t sat_info) {
+  (void)signal_mask;
+  (void)sat_info;
+
+  /* TODO: constellation support */
+
+  switch (cons) {
+    case CONSTELLATION_GPS:
+      if (signal_index == 0) {
+        return GPS_L1_FREQ;
+      } else {
+        return GPS_L2_FREQ;
+      }
+    case CONSTELLATION_SBAS:
+    case CONSTELLATION_GLO:
+    case CONSTELLATION_BDS2:
+    case CONSTELLATION_QZS:
+    case CONSTELLATION_GAL:
+    case CONSTELLATION_INVALID:
+    case CONSTELLATION_COUNT:
+    default:
+      return 0;
+  }
+}
+
 void decode_msm_sat_data(const uint8_t *buff,
                          const uint8_t num_sats,
                          const msm_enum msm_type,
-                         double rough_pseudorange[num_sats],
-                         double sat_info[num_sats],
+                         double rough_range[num_sats],
+                         bool rough_range_valid[num_sats],
+                         uint8_t sat_info[num_sats],
+                         bool sat_info_valid[num_sats],
                          double rough_rate[num_sats],
+                         bool rough_rate_valid[num_sats],
                          uint16_t *bit) {
   /* number of integer milliseconds, DF397 */
   for (uint8_t i = 0; i < num_sats; i++) {
     uint32_t range_ms = getbitu(buff, *bit, 8);
     *bit += 8;
-    /* TODO: handle invalid value */
-    rough_pseudorange[i] = (double)range_ms * PRUNIT_GPS;
+    rough_range[i] = (double)range_ms * PRUNIT_GPS;
+    rough_range_valid[i] = (MSM_ROUGH_RANGE_INVALID != range_ms);
   }
 
   /* satellite info (constellation-dependent)*/
@@ -834,8 +867,10 @@ void decode_msm_sat_data(const uint8_t *buff,
     if (MSM5 == msm_type || MSM7 == msm_type) {
       sat_info[i] = getbitu(buff, *bit, 4);
       *bit += 4;
+      sat_info_valid[i] = true;
     } else {
       sat_info[i] = 0;
+      sat_info_valid[i] = false;
     }
   }
 
@@ -843,16 +878,21 @@ void decode_msm_sat_data(const uint8_t *buff,
   for (uint8_t i = 0; i < num_sats; i++) {
     uint32_t rough_pr = getbitu(buff, *bit, 10);
     *bit += 10;
-    rough_pseudorange[i] += (double)rough_pr / 1024 * PRUNIT_GPS;
+    if (rough_range_valid[i]) {
+      rough_range[i] += (double)rough_pr / 1024 * PRUNIT_GPS;
+    }
   }
 
   /* range rate, m/s, DF399*/
   for (uint8_t i = 0; i < num_sats; i++) {
     if (MSM5 == msm_type || MSM7 == msm_type) {
-      rough_rate[i] = (double)getbits(buff, *bit, 14);
+      int16_t rate = getbits(buff, *bit, 14);
       *bit += 14;
+      rough_rate[i] = (double)rate;
+      rough_rate_valid[i] = (MSM_ROUGH_RANGE_INVALID != rate);
     } else {
       rough_rate[i] = 0;
+      rough_rate_valid[i] = false;
     }
   }
 }
@@ -996,7 +1036,7 @@ void decode_msm_fine_phaserangerates(const uint8_t *buff,
   }
 }
 
-/** Decode an RTCMv3 Multi System Message
+/** Decode an RTCMv3 Multi System Message, types 4 to 7
  *
  * \param buff The input data buffer
  * \param RTCM message struct
@@ -1011,8 +1051,14 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   msm_enum msm_type = to_msm_type(msg->header.msg_num);
 
-  if (msg->header.msg_num != 1074 && msg->header.msg_num != 1075 &&
-      msg->header.msg_num != 1076 && msg->header.msg_num != 1077) {
+  if (MSM4 != msm_type && MSM5 != msm_type && MSM6 != msm_type &&
+      MSM7 != msm_type) {
+    /* Unexpected message type. */
+    return -1;
+  }
+
+  constellation_t cons = to_constellation(msg->header.msg_num);
+  if (CONSTELLATION_GPS != cons) {
     /* Unexpected message type. */
     return -1;
   }
@@ -1032,11 +1078,23 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
 
   /* Satellite Data */
 
-  double rough_pseudorange[num_sats];
+  double rough_range[num_sats];
   double rough_rate[num_sats];
-  double sat_info[num_sats];
-  decode_msm_sat_data(
-      buff, num_sats, msm_type, rough_pseudorange, sat_info, rough_rate, &bit);
+  uint8_t sat_info[num_sats];
+  bool rough_range_valid[num_sats];
+  bool rough_rate_valid[num_sats];
+  bool sat_info_valid[num_sats];
+
+  decode_msm_sat_data(buff,
+                      num_sats,
+                      msm_type,
+                      rough_range,
+                      rough_range_valid,
+                      sat_info,
+                      sat_info_valid,
+                      rough_rate,
+                      rough_rate_valid,
+                      &bit);
 
   /* Signal Data */
 
@@ -1066,31 +1124,49 @@ int8_t rtcm3_decode_msm(const uint8_t *buff, rtcm_msm_message *msg) {
   }
   if (MSM5 == msm_type || MSM7 == msm_type) {
     decode_msm_fine_phaserangerates(buff, num_cells, fine_dop, flags, &bit);
-  } else {
-    for (uint8_t i = 0; i < num_cells; i++) {
-      flags[i].valid_dop = 0;
-    }
   }
 
   uint8_t i = 0;
   for (uint8_t sat = 0; sat < num_sats; sat++) {
-    msg->sats[sat].rough_pseudorange_m = rough_pseudorange[sat];
+    msg->sats[sat].rough_pseudorange_m = rough_range[sat];
     msg->sats[sat].sat_info = sat_info[sat];
     msg->sats[sat].rough_range_rate_m_s = rough_rate[sat];
+
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       if (msg->header.cell_mask[sat * num_sigs + sig]) {
-        msg->signals[i].flags = flags[i];
-        msg->signals[i].pseudorange_m = rough_pseudorange[sat] + fine_pr[i];
-        double freq = (sig == 0) ? GPS_L1_FREQ : GPS_L2_FREQ;
-        /* convert carrier phase into cycles */
-        msg->signals[i].carrier_phase_cyc =
-            (rough_pseudorange[sat] + fine_cp[i]) * (freq / CLIGHT);
+        double freq = msm_signal_frequency(
+            cons, sig, msg->header.signal_mask, sat_info[sat]);
+
+        if (rough_range_valid[sat] && flags[i].valid_pr) {
+          msg->signals[i].pseudorange_m = rough_range[sat] + fine_pr[i];
+        } else {
+          msg->signals[i].pseudorange_m = 0;
+          flags[i].valid_pr = false;
+        }
+        if (rough_range_valid[sat] && flags[i].valid_cp) {
+          /* convert carrier phase into cycles */
+          msg->signals[i].carrier_phase_cyc =
+              (rough_range[sat] + fine_cp[i]) * (freq / CLIGHT);
+        } else {
+          msg->signals[i].carrier_phase_cyc = 0;
+          flags[i].valid_cp = false;
+        }
         msg->signals[i].lock_time_s = lock_time[i];
         msg->signals[i].hca_indicator = hca_indicator[i];
-        msg->signals[i].cnr = cnr[i];
-        /* convert Doppler into Hz */
-        msg->signals[i].range_rate_Hz =
-            (rough_rate[sat] + fine_dop[i]) * (freq / CLIGHT);
+        if (flags[i].valid_cnr) {
+          msg->signals[i].cnr = cnr[i];
+        } else {
+          msg->signals[i].cnr = 0;
+        }
+        if (rough_rate_valid[sat] && flags[i].valid_dop) {
+          /* convert Doppler into Hz */
+          msg->signals[i].range_rate_Hz =
+              (rough_rate[sat] + fine_dop[i]) * (freq / CLIGHT);
+        } else {
+          msg->signals[i].range_rate_Hz = 0;
+          flags[i].valid_dop = 0;
+        }
+        msg->signals[i].flags = flags[i];
         i++;
       }
     }

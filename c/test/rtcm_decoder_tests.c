@@ -1191,7 +1191,13 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
       return false;
     }
   }
-  for (uint8_t i = 0; i < MSM_MAX_CELLS; i++) {
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg_in->header.satellite_mask);
+  uint8_t num_sigs =
+      count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg_in->header.signal_mask);
+  uint8_t cell_mask_size = num_sats * num_sigs;
+
+  for (uint8_t i = 0; i < cell_mask_size; i++) {
     if (msg_in->header.cell_mask[i] != msg_out->header.cell_mask[i]) {
       printf("msm cell_mask[%d] not equal: %u %u\n",
              i,
@@ -1201,8 +1207,6 @@ bool msg_msm_equals(const rtcm_msm_message *msg_in,
     }
   }
 
-  uint8_t num_sats =
-      count_mask_bits(MSM_MAX_CELLS, msg_in->header.satellite_mask);
   for (uint8_t i = 0; i < num_sats; i++) {
     if (fabs(msg_in->sats[i].rough_pseudorange_m -
              msg_out->sats[i].rough_pseudorange_m) > 1) {

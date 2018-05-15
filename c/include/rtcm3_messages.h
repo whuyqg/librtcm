@@ -30,6 +30,18 @@ typedef enum {
   MSM7
 } msm_enum;
 
+/** Constellation identifier. */
+typedef enum constellation_e {
+  CONSTELLATION_INVALID = -1,
+  CONSTELLATION_GPS,
+  CONSTELLATION_SBAS,
+  CONSTELLATION_GLO,
+  CONSTELLATION_BDS2,
+  CONSTELLATION_QZS,
+  CONSTELLATION_GAL,
+  CONSTELLATION_COUNT,
+} constellation_t;
+
 typedef struct {
   uint16_t msg_num; /* Msg Num DF002 uint16 12*/
   uint16_t stn_id;  /* Station Id DF003 uint16 12*/
@@ -206,6 +218,32 @@ static inline msm_enum to_msm_type(uint16_t msg_num) {
     default:
       return MSM_UNKNOWN;
   }
+}
+
+/* Convert message number into constellation enum */
+static inline constellation_t to_constellation(uint16_t msg_num) {
+  if (msg_num < 1071) {
+    return CONSTELLATION_INVALID;
+  }
+  if (msg_num < 1080) {
+    return CONSTELLATION_GPS;
+  }
+  if (msg_num < 1090) {
+    return CONSTELLATION_GLO;
+  }
+  if (msg_num < 1100) {
+    return CONSTELLATION_GAL;
+  }
+  if (msg_num < 1110) {
+    return CONSTELLATION_SBAS;
+  }
+  if (msg_num < 1120) {
+    return CONSTELLATION_QZS;
+  }
+  if (msg_num < 1130) {
+    return CONSTELLATION_BDS2;
+  }
+  return CONSTELLATION_INVALID;
 }
 
 static inline uint8_t count_mask_bits(uint16_t mask_size,
