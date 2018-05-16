@@ -28,6 +28,8 @@
 #define MSM_CP_EXT_INVALID -8388608   /* Signed bit pattern 0x800000 */
 #define MSM_DOP_INVALID -16384        /* Signed bit pattern 0x4000 */
 
+#define MSM_GLO_FCN_OFFSET 7 /* Offset for FCN coding in sat_info */
+
 #define CLIGHT 299792458.0 /* speed of light (m/s) */
 
 #define SECS_MS 1000
