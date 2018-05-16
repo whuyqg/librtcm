@@ -15,25 +15,14 @@
 
 #include "rtcm3_messages.h"
 
-double msm_signal_frequency(const constellation_t cons,
+double msm_signal_frequency(const rtcm_msm_header *header,
                             const uint8_t signal_index,
-                            const bool signal_mask[],
                             const uint8_t sat_info);
 msm_enum to_msm_type(uint16_t msg_num);
 constellation_t to_constellation(uint16_t msg_num);
 uint8_t count_mask_bits(uint16_t mask_size, const bool mask[]);
 
-uint8_t get_msm_gps_prn(uint8_t sat_id);
-code_t get_msm_gps_code(uint8_t signal_id);
-uint8_t get_msm_glo_prn(uint8_t sat_id);
-code_t get_msm_glo_code(uint8_t signal_id);
-uint8_t get_msm_gal_prn(uint8_t sat_id);
-code_t get_msm_gal_code(uint8_t signal_id);
-uint8_t get_msm_qzs_prn(uint8_t sat_id);
-code_t get_msm_qzs_code(uint8_t signal_id);
-uint8_t get_msm_bds2_prn(uint8_t sat_id);
-code_t get_msm_bds2_code(uint8_t signal_id);
-uint8_t get_msm_sbas_prn(uint8_t sat_id);
-code_t get_msm_sbas_code(uint8_t signal_id);
+code_t msm_signal_to_code(const rtcm_msm_header *header, uint8_t signal_index);
+uint8_t msm_sat_to_prn(const rtcm_msm_header *header, uint8_t satellite_index);
 
 #endif /* SWIFTNAV_RTCM3_MSM_UTILS_H */

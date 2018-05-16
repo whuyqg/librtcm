@@ -943,8 +943,8 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t buff[]) {
   for (uint8_t sat = 0; sat < num_sats; sat++) {
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       if (header->cell_mask[sat * num_sigs + sig]) {
-        double freq = msm_signal_frequency(
-            cons, sig, msg->header.signal_mask, msg->sats[sat].sat_info);
+        double freq =
+            msm_signal_frequency(&msg->header, sig, msg->sats[sat].sat_info);
 
         flags[i] = msg->signals[i].flags;
         if (flags[i].valid_pr) {

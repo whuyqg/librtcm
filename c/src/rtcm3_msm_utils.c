@@ -12,36 +12,30 @@
 
 #include "rtcm3_msm_utils.h"
 
-static code_t msm_signal_to_code(const constellation_t cons,
-                                 const uint8_t signal_index,
-                                 const bool signal_mask[]) {
-  (void)signal_mask;
-  switch (cons) {
-    case CONSTELLATION_GPS:
-      if (0 == signal_index) {
-        return CODE_GPS_L1CA;
-      } else {
-        return CODE_GPS_L2CM;
+/* return the position of the nth bit that is set in a 64-bit bitfield */
+static uint8_t get_nth_bit_set(const uint8_t mask_size,
+                               const bool mask[mask_size],
+                               const uint8_t n) {
+  uint8_t ones_found = 0;
+  for (uint8_t pos = 0; pos < 64; pos++) {
+    /* check if the first bit is set */
+    if (mask[pos]) {
+      if (ones_found == n) {
+        /* this is the nth set bit in the field, return its position */
+        return pos;
       }
-    case CONSTELLATION_SBAS:
-    case CONSTELLATION_GLO:
-    case CONSTELLATION_BDS2:
-    case CONSTELLATION_QZS:
-    case CONSTELLATION_GAL:
-    case CONSTELLATION_INVALID:
-    case CONSTELLATION_COUNT:
-    default:
-      return CODE_INVALID;
+      ones_found++;
+    }
   }
+  return 0;
 }
 
-double msm_signal_frequency(const constellation_t cons,
+double msm_signal_frequency(const rtcm_msm_header *header,
                             const uint8_t signal_index,
-                            const bool signal_mask[],
                             const uint8_t sat_info) {
   (void)sat_info;
 
-  code_t code = msm_signal_to_code(cons, signal_index, signal_mask);
+  code_t code = msm_signal_to_code(header, signal_index);
 
   /* TODO: use sid_to_carr_freq from LNSP */
 
@@ -166,12 +160,12 @@ uint8_t count_mask_bits(uint16_t mask_size, const bool mask[]) {
   return ret;
 }
 
-uint8_t get_msm_gps_prn(uint8_t sat_id) {
+static uint8_t get_msm_gps_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-90 */
   return sat_id + GPS_FIRST_PRN;
 }
 
-code_t get_msm_gps_code(uint8_t signal_id) {
+static code_t get_msm_gps_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-91 */
   switch (signal_id) {
     case 2: /* 1C */
@@ -199,12 +193,12 @@ code_t get_msm_gps_code(uint8_t signal_id) {
   }
 }
 
-uint8_t get_msm_glo_prn(uint8_t sat_id) {
+static uint8_t get_msm_glo_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-95 */
   return sat_id + GLO_FIRST_PRN;
 }
 
-code_t get_msm_glo_code(uint8_t signal_id) {
+static code_t get_msm_glo_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-96 */
   switch (signal_id) {
     case 2:
@@ -219,7 +213,7 @@ code_t get_msm_glo_code(uint8_t signal_id) {
   }
 }
 
-uint8_t get_msm_gal_prn(uint8_t sat_id) {
+static uint8_t get_msm_gal_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-98 */
 
   /* Note: need to check how these are encoded in SBP:
@@ -230,7 +224,7 @@ uint8_t get_msm_gal_prn(uint8_t sat_id) {
   return sat_id + GAL_FIRST_PRN;
 }
 
-code_t get_msm_gal_code(uint8_t signal_id) {
+static code_t get_msm_gal_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-99 */
   switch (signal_id) {
     /* case 2: 1C */
@@ -258,12 +252,12 @@ code_t get_msm_gal_code(uint8_t signal_id) {
   }
 }
 
-uint8_t get_msm_sbas_prn(uint8_t sat_id) {
+static uint8_t get_msm_sbas_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-101 */
   return sat_id + SBAS_FIRST_PRN;
 }
 
-code_t get_msm_sbas_code(uint8_t signal_id) {
+static code_t get_msm_sbas_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-102 */
   switch (signal_id) {
     case 2:
@@ -277,12 +271,12 @@ code_t get_msm_sbas_code(uint8_t signal_id) {
   }
 }
 
-uint8_t get_msm_qzs_prn(uint8_t sat_id) {
+static uint8_t get_msm_qzs_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-104 */
   return sat_id + QZS_FIRST_PRN;
 }
 
-code_t get_msm_qzs_code(uint8_t signal_id) {
+static code_t get_msm_qzs_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-105 */
   switch (signal_id) {
     /* case 2: 1C */
@@ -304,12 +298,12 @@ code_t get_msm_qzs_code(uint8_t signal_id) {
   }
 }
 
-uint8_t get_msm_bds2_prn(uint8_t sat_id) {
+static uint8_t get_msm_bds2_prn(uint8_t sat_id) {
   /*RTCM 10403.3 Table 3.5-107 */
   return sat_id + BDS2_FIRST_PRN;
 }
 
-code_t get_msm_bds2_code(uint8_t signal_id) {
+static code_t get_msm_bds2_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-108 */
   switch (signal_id) {
     case 2: /* 2I */
@@ -326,5 +320,56 @@ code_t get_msm_bds2_code(uint8_t signal_id) {
     default:
       /* other BDS2 codes not supported at this point */
       return CODE_INVALID;
+  }
+}
+
+code_t msm_signal_to_code(const rtcm_msm_header *header, uint8_t signal_index) {
+  constellation_t cons = to_constellation(header->msg_num);
+  uint8_t code_index =
+      get_nth_bit_set(MSM_SIGNAL_MASK_SIZE, header->signal_mask, signal_index) +
+      1;
+
+  switch (cons) {
+    case CONSTELLATION_GPS:
+      return get_msm_gps_code(code_index);
+    case CONSTELLATION_SBAS:
+      return get_msm_sbas_code(code_index);
+    case CONSTELLATION_GLO:
+      return get_msm_glo_code(code_index);
+    case CONSTELLATION_BDS2:
+      return get_msm_bds2_code(code_index);
+    case CONSTELLATION_QZS:
+      return get_msm_qzs_code(code_index);
+    case CONSTELLATION_GAL:
+      return get_msm_gal_code(code_index);
+    case CONSTELLATION_INVALID:
+    case CONSTELLATION_COUNT:
+    default:
+      return CODE_INVALID;
+  }
+}
+
+uint8_t msm_sat_to_prn(const rtcm_msm_header *header, uint8_t satellite_index) {
+  constellation_t cons = to_constellation(header->msg_num);
+  uint8_t prn_index = get_nth_bit_set(
+      MSM_SATELLITE_MASK_SIZE, header->satellite_mask, satellite_index);
+
+  switch (cons) {
+    case CONSTELLATION_GPS:
+      return get_msm_gps_prn(prn_index);
+    case CONSTELLATION_SBAS:
+      return get_msm_sbas_prn(prn_index);
+    case CONSTELLATION_GLO:
+      return get_msm_glo_prn(prn_index);
+    case CONSTELLATION_BDS2:
+      return get_msm_bds2_prn(prn_index);
+    case CONSTELLATION_QZS:
+      return get_msm_qzs_prn(prn_index);
+    case CONSTELLATION_GAL:
+      return get_msm_gal_prn(prn_index);
+    case CONSTELLATION_INVALID:
+    case CONSTELLATION_COUNT:
+    default:
+      return 0;
   }
 }
