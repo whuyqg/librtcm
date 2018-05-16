@@ -260,13 +260,12 @@ static uint8_t get_msm_sbas_prn(uint8_t sat_id) {
 static code_t get_msm_sbas_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-102 */
   switch (signal_id) {
-    case 2:
-      return CODE_SBAS_L1CA;
+    /* case 2: 1C */
     /* case 22: 5I */
     /* case 23: 5Q */
     /* case 24: 5X */
     default:
-      /* other SBAS codes not supported at this point */
+      /* SBAS observations not supported at this point */
       return CODE_INVALID;
   }
 }
