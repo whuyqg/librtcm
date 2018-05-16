@@ -33,8 +33,6 @@ static uint8_t get_nth_bit_set(const uint8_t mask_size,
 double msm_signal_frequency(const rtcm_msm_header *header,
                             const uint8_t signal_index,
                             const uint8_t sat_info) {
-  (void)sat_info;
-
   code_t code = msm_signal_to_code(header, signal_index);
 
   /* TODO: use sid_to_carr_freq from LNSP */
@@ -53,11 +51,11 @@ double msm_signal_frequency(const rtcm_msm_header *header,
     case CODE_GPS_L5X:
       return GPS_L5_HZ;
     case CODE_GLO_L1OF: {
-      int8_t fcn = sat_info;
+      int8_t fcn = sat_info - MSM_GLO_FCN_OFFSET;
       return GLO_L1_HZ + fcn * GLO_L1_DELTA_HZ;
     }
     case CODE_GLO_L2OF: {
-      int8_t fcn = sat_info;
+      int8_t fcn = sat_info - MSM_GLO_FCN_OFFSET;
       return GLO_L2_HZ + fcn * GLO_L2_DELTA_HZ;
     }
     case CODE_BDS2_B11:
