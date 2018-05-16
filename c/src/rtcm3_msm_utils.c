@@ -12,21 +12,16 @@
 
 #include "rtcm3_msm_utils.h"
 
-double msm_signal_frequency(const constellation_t cons,
-                            const uint8_t signal_index,
-                            const bool signal_mask[MSM_SIGNAL_MASK_SIZE],
-                            const uint8_t sat_info) {
+static code_t msm_signal_to_code(const constellation_t cons,
+                                 const uint8_t signal_index,
+                                 const bool signal_mask[]) {
   (void)signal_mask;
-  (void)sat_info;
-
-  /* TODO: constellation support */
-
   switch (cons) {
     case CONSTELLATION_GPS:
       if (signal_index == 0) {
-        return GPS_L1_FREQ;
+        return CODE_GPS_L1CA;
       } else {
-        return GPS_L2_FREQ;
+        return CODE_GPS_L2CM;
       }
     case CONSTELLATION_SBAS:
     case CONSTELLATION_GLO:
@@ -35,6 +30,78 @@ double msm_signal_frequency(const constellation_t cons,
     case CONSTELLATION_GAL:
     case CONSTELLATION_INVALID:
     case CONSTELLATION_COUNT:
+    default:
+      return CODE_INVALID;
+  }
+}
+
+double msm_signal_frequency(const constellation_t cons,
+                            const uint8_t signal_index,
+                            const bool signal_mask[],
+                            const uint8_t sat_info) {
+  (void)sat_info;
+
+  code_t code = msm_signal_to_code(cons, signal_index, signal_mask);
+
+  /* TODO: use sid_to_carr_freq from LNSP */
+
+  switch (code) {
+    case CODE_GPS_L1CA:
+    case CODE_GPS_L1P:
+      return GPS_L1_HZ;
+    case CODE_GPS_L2CM:
+    case CODE_GPS_L2P:
+    case CODE_GPS_L2CL:
+    case CODE_GPS_L2CX:
+      return GPS_L2_HZ;
+    case CODE_GPS_L5I:
+    case CODE_GPS_L5Q:
+    case CODE_GPS_L5X:
+      return GPS_L5_HZ;
+    case CODE_GLO_L1OF: {
+      int8_t fcn = sat_info;
+      return GLO_L1_HZ + fcn * GLO_L1_DELTA_HZ;
+    }
+    case CODE_GLO_L2OF: {
+      int8_t fcn = sat_info;
+      return GLO_L2_HZ + fcn * GLO_L2_DELTA_HZ;
+    }
+    case CODE_BDS2_B11:
+      return BDS2_B11_HZ;
+    case CODE_BDS2_B2:
+      return BDS2_B2_HZ;
+    case CODE_SBAS_L1CA:
+      return SBAS_L1_HZ;
+    case CODE_GAL_E1B:
+    case CODE_GAL_E1C:
+    case CODE_GAL_E1X:
+      return GAL_E1_HZ;
+    case CODE_GAL_E7I:
+    case CODE_GAL_E7Q:
+    case CODE_GAL_E7X:
+      return GAL_E7_HZ;
+    case CODE_GAL_E5I:
+    case CODE_GAL_E5Q:
+    case CODE_GAL_E5X:
+      return GAL_E5_HZ;
+    case CODE_GAL_E6B:
+    case CODE_GAL_E6C:
+    case CODE_GAL_E6X:
+      return GAL_E6_HZ;
+    case CODE_GAL_E8:
+      return GAL_E8_HZ;
+    case CODE_QZS_L1CA:
+      return QZS_L1_HZ;
+    case CODE_QZS_L2CM:
+    case CODE_QZS_L2CL:
+    case CODE_QZS_L2CX:
+      return QZS_L2_HZ;
+    case CODE_QZS_L5I:
+    case CODE_QZS_L5Q:
+    case CODE_QZS_L5X:
+      return QZS_L5_HZ;
+    case CODE_INVALID:
+    case CODE_COUNT:
     default:
       return 0;
   }
@@ -107,32 +174,27 @@ uint8_t get_msm_gps_prn(uint8_t sat_id) {
 code_t get_msm_gps_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-91 */
   switch (signal_id) {
-    case 2:
+    case 2: /* 1C */
       return CODE_GPS_L1CA;
-    case 3:
+    case 3: /* 1P */
       return CODE_GPS_L1P;
     /* case 4: 1W */
     /* case 8: 2C */
-    case 9:
+    case 9: /* 2P */
       return CODE_GPS_L2P;
     /* case 10: 2W */
-    case 15:
+    case 15: /* 2S */
+    case 16: /* 2L */
+    case 17: /* 2X */
       return CODE_GPS_L2CM;
-    case 16:
-      return CODE_GPS_L2CL;
-    case 17:
-      return CODE_GPS_L2CX;
-    case 22:
-      return CODE_GPS_L5I;
-    case 23:
-      return CODE_GPS_L5Q;
-    case 24:
-      return CODE_GPS_L5X;
+    /* case 22: 5I */
+    /* case 23: 5Q */
+    /* case 24: 5X */
     /* case 30: 1S */
     /* case 31: 1L */
     /* case 32: 1X */
     default:
-      /* other GPS codes cannot be represented in SBP */
+      /* other GPS codes not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -152,7 +214,7 @@ code_t get_msm_glo_code(uint8_t signal_id) {
       return CODE_GLO_L2OF;
     /* case 9: CODE_GLO_L2P; */
     default:
-      /* other GLO codes cannot be represented in SBP */
+      /* other GLO codes not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -171,40 +233,27 @@ uint8_t get_msm_gal_prn(uint8_t sat_id) {
 code_t get_msm_gal_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-99 */
   switch (signal_id) {
-    case 2:                /* 1C */
-      return CODE_GAL_E1C; /* pilot channel at E1 */
+    /* case 2: 1C */
     /* case 3: 1A */
-    case 4:                /* 1B */
-      return CODE_GAL_E1B; /* data channel at E1 (1540 * 1.023 MHz) */
-    case 5:                /* 1X */
-      return CODE_GAL_E1X; /* combined tracking on E1 */
-    /*case 6: 1Z */
-    case 8: /* 6C */
-      return CODE_GAL_E6C;
+    /* case 4: 1B */
+    /* case 5: 1X */
+    /* case 6: 1Z */
+    /* case 8: 6C */
     /* case 9: 6A */
-    case 10: /* 6B */
-      return CODE_GAL_E6B;
-    case 11:               /* 6X */
-      return CODE_GAL_E6X; /* combined tracking on E6 */
+    /* case 10: 6B */
+    /* case 11: 6X */
     /* case 12: 6Z */
-    case 14: /* 7I */
-      return CODE_GAL_E7I;
-    case 15: /* 7Q */
-      return CODE_GAL_E7Q;
-    case 16:               /* 7X */
-      return CODE_GAL_E7X; /* combined tracking on E5b */
-    case 18:               /* 8I */
-    case 19:               /* 8Q */
-    case 20:               /* 8X */
-      return CODE_GAL_E8;  /* E5 AltBOC tracking ??*/
-    case 22:               /* 5I */
-      return CODE_GAL_E5I;
-    case 23: /* 5Q */
-      return CODE_GAL_E5Q;
-    case 24:               /* 5X */
-      return CODE_GAL_E5X; /* combined tracking on E5a */
+    /* case 14: 7I */
+    /* case 15: 7Q */
+    /* case 16: 7X */
+    /* case 18: 8I */
+    /* case 19: 8Q */
+    /* case 20: 8X */
+    /* case 22: 5I */
+    /* case 23: 5Q */
+    /* case 24: 5X */
     default:
-      /* other GAL codes cannot be represented in SBP */
+      /* GAL not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -223,7 +272,7 @@ code_t get_msm_sbas_code(uint8_t signal_id) {
     /* case 23: 5Q */
     /* case 24: 5X */
     default:
-      /* other SBAS codes cannot be represented in SBP */
+      /* other SBAS codes not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -236,28 +285,21 @@ uint8_t get_msm_qzs_prn(uint8_t sat_id) {
 code_t get_msm_qzs_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-105 */
   switch (signal_id) {
-    case 2: /* 1C */
-      return CODE_QZS_L1CA;
+    /* case 2: 1C */
     /* case 9:  6S */
-    /* case 10:  6L */
-    /* case 11:  6X */
-    case 15: /* 2S */
-      return CODE_QZS_L2CM;
-    case 16: /* 2L */
-      return CODE_QZS_L2CL;
-    case 17: /* 2X */
-      return CODE_QZS_L2CX;
-    case 22: /* 5I */
-      return CODE_QZS_L5I;
-    case 23: /* 5Q */
-      return CODE_QZS_L5Q;
-    case 24: /* 5X */
-      return CODE_QZS_L5X;
+    /* case 10: 6L */
+    /* case 11: 6X */
+    /* case 15: 2S */
+    /* case 16: 2L */
+    /* case 17: 2X */
+    /* case 22: 5I */
+    /* case 23: 5Q */
+    /* case 24: 5X */
     /* case 30: 1S */
     /* case 31: 1L */
     /* case 32: 1X */
     default:
-      /* other QZS codes cannot be represented in SBP */
+      /* QZS not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -282,7 +324,7 @@ code_t get_msm_bds2_code(uint8_t signal_id) {
     /* case 15:  7Q */
     /* case 16:  7X */
     default:
-      /* other BDS2 codes cannot be represented in SBP */
+      /* other BDS2 codes not supported at this point */
       return CODE_INVALID;
   }
 }

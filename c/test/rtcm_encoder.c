@@ -82,7 +82,7 @@ void encode_basic_freq_data(const rtcm_freq_data *freq_data,
   /* Calculate PhaseRange – L1 Pseudorange (DF012/DF018). */
   int32_t ppr = roundl(cp_pr * (CLIGHT / freq) / 0.0005);
 
-  if (fabs(freq - GPS_L1_FREQ) < 0.01) {
+  if (fabs(freq - GPS_L1_HZ) < 0.01) {
     setbitu(buff, *bit, 1, 0);
     *bit += 1;
     setbitu(buff, *bit, 24, pr);
@@ -108,7 +108,7 @@ void encode_basic_glo_freq_data(const rtcm_freq_data *freq_data,
                                 const uint8_t fcn,
                                 uint8_t *buff,
                                 uint16_t *bit) {
-  bool L1 = fabs(freq - GLO_L1_FREQ) < 0.01;
+  bool L1 = fabs(freq - GLO_L1_HZ) < 0.01;
   /* Calculate GPS Integer L1 Pseudorange Modulus Ambiguity (DF044). */
   uint8_t amb = (uint8_t)(*l1_pr / PRUNIT_GLO);
 
@@ -124,9 +124,9 @@ void encode_basic_glo_freq_data(const rtcm_freq_data *freq_data,
 
   double glo_freq = 0.0;
   if (L1) {
-    glo_freq = freq + (fcn - 7) * GLO_L1_CH_OFFSET;
+    glo_freq = freq + (fcn - 7) * GLO_L1_DELTA_HZ;
   } else {
-    glo_freq = freq + (fcn - 7) * GLO_L2_CH_OFFSET;
+    glo_freq = freq + (fcn - 7) * GLO_L2_DELTA_HZ;
   }
   /* phaserange - L1 pseudorange */
   double cp_pr = freq_data->carrier_phase - l1_prc / (CLIGHT / glo_freq);
@@ -286,7 +286,7 @@ uint16_t rtcm3_encode_1001(const rtcm_obs_message *msg_1001, uint8_t *buff) {
       setbitu(buff, bit, 6, msg_1001->sats[i].svId);
       bit += 6;
       encode_basic_freq_data(&msg_1001->sats[i].obs[L1_FREQ],
-                             GPS_L1_FREQ,
+                             GPS_L1_HZ,
                              &msg_1001->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
@@ -322,7 +322,7 @@ uint16_t rtcm3_encode_1002(const rtcm_obs_message *msg_1002, uint8_t *buff) {
       setbitu(buff, bit, 6, msg_1002->sats[i].svId);
       bit += 6;
       encode_basic_freq_data(&msg_1002->sats[i].obs[L1_FREQ],
-                             GPS_L1_FREQ,
+                             GPS_L1_HZ,
                              &msg_1002->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
@@ -360,12 +360,12 @@ uint16_t rtcm3_encode_1003(const rtcm_obs_message *msg_1003, uint8_t *buff) {
       setbitu(buff, bit, 6, msg_1003->sats[i].svId);
       bit += 6;
       encode_basic_freq_data(&msg_1003->sats[i].obs[L1_FREQ],
-                             GPS_L1_FREQ,
+                             GPS_L1_HZ,
                              &msg_1003->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
       encode_basic_freq_data(&msg_1003->sats[i].obs[L2_FREQ],
-                             GPS_L2_FREQ,
+                             GPS_L2_HZ,
                              &msg_1003->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
@@ -391,7 +391,7 @@ uint16_t rtcm3_encode_1004(const rtcm_obs_message *msg_1004, uint8_t *buff) {
       setbitu(buff, bit, 6, msg_1004->sats[i].svId);
       bit += 6;
       encode_basic_freq_data(&msg_1004->sats[i].obs[L1_FREQ],
-                             GPS_L1_FREQ,
+                             GPS_L1_HZ,
                              &msg_1004->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
@@ -409,7 +409,7 @@ uint16_t rtcm3_encode_1004(const rtcm_obs_message *msg_1004, uint8_t *buff) {
       bit += 8;
 
       encode_basic_freq_data(&msg_1004->sats[i].obs[L2_FREQ],
-                             GPS_L2_FREQ,
+                             GPS_L2_HZ,
                              &msg_1004->sats[i].obs[L1_FREQ].pseudorange,
                              buff,
                              &bit);
@@ -531,7 +531,7 @@ uint16_t rtcm3_encode_1010(const rtcm_obs_message *msg_1010, uint8_t *buff) {
       setbitu(buff, bit, 6, sat_obs->svId);
       bit += 6;
       encode_basic_glo_freq_data(&sat_obs->obs[L1_FREQ],
-                                 GLO_L1_FREQ,
+                                 GLO_L1_HZ,
                                  &sat_obs->obs[L1_FREQ].pseudorange,
                                  sat_obs->fcn,
                                  buff,
@@ -567,7 +567,7 @@ uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t *buff) {
       setbitu(buff, bit, 6, sat_obs->svId);
       bit += 6;
       encode_basic_glo_freq_data(&sat_obs->obs[L1_FREQ],
-                                 GLO_L1_FREQ,
+                                 GLO_L1_HZ,
                                  &sat_obs->obs[L1_FREQ].pseudorange,
                                  sat_obs->fcn,
                                  buff,
@@ -582,7 +582,7 @@ uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t *buff) {
       bit += 8;
 
       encode_basic_glo_freq_data(&sat_obs->obs[L2_FREQ],
-                                 GLO_L2_FREQ,
+                                 GLO_L2_HZ,
                                  &sat_obs->obs[L1_FREQ].pseudorange,
                                  sat_obs->fcn,
                                  buff,

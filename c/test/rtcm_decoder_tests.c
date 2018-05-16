@@ -729,7 +729,7 @@ bool msgobs_equals(const rtcm_obs_message *msg_in,
         }
       }
       if (in_freq->flags.valid_cp) {
-        double frequency = freq == L1_FREQ ? GPS_L1_FREQ : GPS_L2_FREQ;
+        double frequency = freq == L1_FREQ ? GPS_L1_HZ : GPS_L2_HZ;
         if (fabs(in_freq->carrier_phase - out_freq->carrier_phase) -
                 ((double)amb * PRUNIT_GPS / (CLIGHT / frequency)) >
             0.0005 / (CLIGHT / frequency)) {
@@ -882,8 +882,8 @@ bool msgobs_glo_equals(const rtcm_obs_message *msg_in,
       if (in_freq->flags.valid_cp) {
         int fcn = msg_in->sats[in_sat_idx].fcn - 7;
         double frequency = freq == L1_FREQ
-                               ? GLO_L1_FREQ + fcn * GLO_L1_CH_OFFSET
-                               : GLO_L1_FREQ + fcn * GLO_L2_CH_OFFSET;
+                               ? GLO_L1_HZ + fcn * GLO_L1_DELTA_HZ
+                               : GLO_L1_HZ + fcn * GLO_L2_DELTA_HZ;
         if (fabs(in_freq->carrier_phase - out_freq->carrier_phase) -
                 ((double)amb * PRUNIT_GLO / (CLIGHT / frequency)) >
             0.0005 / (CLIGHT / frequency)) {
@@ -1459,7 +1459,7 @@ void test_rtcm_msm5(void) {
   msg_msm5.header = header;
   msg_msm5.sats[0].rough_range_m =
       round(20000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
-  msg_msm5.sats[0].rough_range_rate_m_s = round(1001 * (CLIGHT / GPS_L1_FREQ));
+  msg_msm5.sats[0].rough_range_rate_m_s = round(1001 * (CLIGHT / GPS_L1_HZ));
   msg_msm5.signals[0].pseudorange_m = 20000004.4;
   msg_msm5.signals[0].carrier_phase_cyc = 105100794.4;
   msg_msm5.signals[0].range_rate_Hz = 1001; /* Hz */
@@ -1474,12 +1474,12 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[1] = msg_msm5.signals[0];
   msg_msm5.signals[1].pseudorange_m = 20000124.4;
   msg_msm5.signals[1].carrier_phase_cyc = 81897184.4;
-  msg_msm5.signals[1].range_rate_Hz = 1001 * GPS_L2_FREQ / GPS_L1_FREQ;
+  msg_msm5.signals[1].range_rate_Hz = 1001 * GPS_L2_HZ / GPS_L1_HZ;
   msg_msm5.signals[1].cnr = 35;
 
   msg_msm5.sats[1].rough_range_m =
       round(22000004.4 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
-  msg_msm5.sats[1].rough_range_rate_m_s = round(-1001 * (CLIGHT / GPS_L1_FREQ));
+  msg_msm5.sats[1].rough_range_rate_m_s = round(-1001 * (CLIGHT / GPS_L1_HZ));
   msg_msm5.signals[2].pseudorange_m = 22000004.4;
   msg_msm5.signals[2].carrier_phase_cyc = 115610703.4;
   msg_msm5.signals[2].range_rate_Hz = -1001.5;
@@ -1493,11 +1493,11 @@ void test_rtcm_msm5(void) {
   msg_msm5.signals[3] = msg_msm5.signals[2];
   msg_msm5.signals[3].pseudorange_m = 22000024.4;
   msg_msm5.signals[3].carrier_phase_cyc = 90086422.236;
-  msg_msm5.signals[3].range_rate_Hz = -1001.5 * GPS_L2_FREQ / GPS_L1_FREQ;
+  msg_msm5.signals[3].range_rate_Hz = -1001.5 * GPS_L2_HZ / GPS_L1_HZ;
 
   msg_msm5.sats[2].rough_range_m =
       round(22000004.55 / PRUNIT_GPS * 1024) * PRUNIT_GPS / 1024;
-  msg_msm5.sats[2].rough_range_rate_m_s = round(550 * (CLIGHT / GPS_L1_FREQ));
+  msg_msm5.sats[2].rough_range_rate_m_s = round(550 * (CLIGHT / GPS_L1_HZ));
   msg_msm5.signals[4].pseudorange_m = 22000004.55;
   msg_msm5.signals[4].carrier_phase_cyc = 115610553.4;
   msg_msm5.signals[4].range_rate_Hz = 555;
