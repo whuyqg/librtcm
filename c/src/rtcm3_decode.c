@@ -1123,8 +1123,7 @@ static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
 
     for (uint8_t sig = 0; sig < num_sigs; sig++) {
       if (msg->header.cell_mask[sat * num_sigs + sig]) {
-        double freq = msm_signal_frequency(
-            cons, sig, msg->header.signal_mask, sat_info[sat]);
+        double freq = msm_signal_frequency(&msg->header, sig, sat_info[sat]);
 
         if (rough_range_valid[sat] && flags[i].valid_pr) {
           msg->signals[i].pseudorange_m = rough_range[sat] + fine_pr[i];
