@@ -266,9 +266,8 @@ uint8_t get_cnr(rtcm_freq_data *freq_data,
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1001(const uint8_t buff[], rtcm_obs_message *msg_1001) {
   uint16_t bit = 0;
@@ -303,9 +302,8 @@ rtcm3_rc rtcm3_decode_1001(const uint8_t buff[], rtcm_obs_message *msg_1001) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1002(const uint8_t buff[], rtcm_obs_message *msg_1002) {
   uint16_t bit = 0;
@@ -344,9 +342,8 @@ rtcm3_rc rtcm3_decode_1002(const uint8_t buff[], rtcm_obs_message *msg_1002) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
   uint16_t bit = 0;
@@ -391,9 +388,8 @@ rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
   uint16_t bit = 0;
@@ -475,9 +471,8 @@ rtcm3_rc rtcm3_decode_1005_base(const uint8_t buff[],
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1005(const uint8_t buff[], rtcm_msg_1005 *msg_1005) {
   uint16_t bit = 0;
@@ -495,9 +490,8 @@ rtcm3_rc rtcm3_decode_1005(const uint8_t buff[], rtcm_msg_1005 *msg_1005) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1006(const uint8_t buff[], rtcm_msg_1006 *msg_1006) {
   uint16_t bit = 0;
@@ -534,9 +528,8 @@ rtcm3_rc rtcm3_decode_1007_base(const uint8_t buff[],
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1007(const uint8_t buff[], rtcm_msg_1007 *msg_1007) {
   uint16_t bit = 0;
@@ -555,9 +548,8 @@ rtcm3_rc rtcm3_decode_1007(const uint8_t buff[], rtcm_msg_1007 *msg_1007) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1008(const uint8_t buff[], rtcm_msg_1008 *msg_1008) {
   uint16_t bit = 0;
@@ -581,9 +573,8 @@ rtcm3_rc rtcm3_decode_1008(const uint8_t buff[], rtcm_msg_1008 *msg_1008) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1010(const uint8_t buff[], rtcm_obs_message *msg_1010) {
   uint16_t bit = 0;
@@ -624,9 +615,8 @@ rtcm3_rc rtcm3_decode_1010(const uint8_t buff[], rtcm_obs_message *msg_1010) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1012(const uint8_t buff[], rtcm_obs_message *msg_1012) {
   uint16_t bit = 0;
@@ -681,9 +671,8 @@ rtcm3_rc rtcm3_decode_1012(const uint8_t buff[], rtcm_obs_message *msg_1012) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1029(const uint8_t buff[], rtcm_msg_1029 *msg_1029) {
   uint16_t bit = 0;
@@ -719,9 +708,8 @@ rtcm3_rc rtcm3_decode_1029(const uint8_t buff[], rtcm_msg_1029 *msg_1029) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1033(const uint8_t buff[], rtcm_msg_1033 *msg_1033) {
   uint16_t bit = 0;
@@ -779,9 +767,8 @@ rtcm3_rc rtcm3_decode_1033(const uint8_t buff[], rtcm_msg_1033 *msg_1033) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  */
 rtcm3_rc rtcm3_decode_1230(const uint8_t buff[], rtcm_msg_1230 *msg_1230) {
   uint16_t bit = 0;
@@ -1013,10 +1000,9 @@ static void decode_msm_fine_phaserangerates(const uint8_t buff[],
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
- *          - `-2` : Cell mask too large
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large
  */
 static rtcm3_rc rtcm3_decode_msm_internal(const uint8_t buff[],
                                           rtcm_msm_message *msg) {
@@ -1153,10 +1139,9 @@ static rtcm3_rc rtcm3_decode_msm_internal(const uint8_t buff[],
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
- *          - `-2` : Cell mask too large
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large
  */
 rtcm3_rc rtcm3_decode_msm4(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
@@ -1172,10 +1157,9 @@ rtcm3_rc rtcm3_decode_msm4(const uint8_t buff[], rtcm_msm_message *msg) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
- *          - `-2` : Cell mask too large
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large
  */
 rtcm3_rc rtcm3_decode_msm5(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
@@ -1191,10 +1175,9 @@ rtcm3_rc rtcm3_decode_msm5(const uint8_t buff[], rtcm_msm_message *msg) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
- *          - `-2` : Cell mask too large
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large
  */
 rtcm3_rc rtcm3_decode_msm6(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
@@ -1210,10 +1193,9 @@ rtcm3_rc rtcm3_decode_msm6(const uint8_t buff[], rtcm_msm_message *msg) {
  *
  * \param buff The input data buffer
  * \param RTCM message struct
- * \return If valid then return 0.
- *         Returns a negative number if the message is invalid:
- *          - `-1` : Message type mismatch
- *          - `-2` : Cell mask too large
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large
  */
 rtcm3_rc rtcm3_decode_msm7(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
