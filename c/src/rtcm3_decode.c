@@ -164,14 +164,23 @@ uint16_t rtcm3_read_glo_header(const uint8_t buff[], rtcm_obs_header *header) {
 }
 
 static uint16_t rtcm3_read_msm_header(const uint8_t buff[],
+                                      const constellation_t cons,
                                       rtcm_msm_header *header) {
   uint16_t bit = 0;
   header->msg_num = getbitu(buff, bit, 12);
   bit += 12;
   header->stn_id = getbitu(buff, bit, 12);
   bit += 12;
-  header->tow_ms = getbitu(buff, bit, 30);
-  bit += 30;
+  if (CONSTELLATION_GLO == cons) {
+    /* TODO: check this */
+    /* uint8_t day_of_week = getbitu(buff, bit, 3); */
+    bit += 3;
+    header->tow_ms = getbitu(buff, bit, 27);
+    bit += 27;
+  } else {
+    header->tow_ms = getbitu(buff, bit, 30);
+    bit += 30;
+  }
   header->multiple = getbitu(buff, bit, 1);
   bit += 1;
   header->iods = getbitu(buff, bit, 3);
@@ -377,8 +386,8 @@ rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
 
     l2_freq_data->flags.valid_pr =
         construct_L2_code(l2_freq_data, l1_freq_data, l2_pr);
-    l2_freq_data->flags.valid_cp = construct_L2_phase(
-        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
+    l2_freq_data->flags.valid_cp =
+        construct_L2_phase(l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
   }
 
   return RC_OK;
@@ -429,8 +438,8 @@ rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
     l2_freq_data->flags.valid_cnr = get_cnr(l2_freq_data, buff, &bit);
     l2_freq_data->flags.valid_pr =
         construct_L2_code(l2_freq_data, l1_freq_data, l2_pr);
-    l2_freq_data->flags.valid_cp = construct_L2_phase(
-        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
+    l2_freq_data->flags.valid_cp =
+        construct_L2_phase(l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
   }
 
   return RC_OK;
@@ -1004,10 +1013,9 @@ static void decode_msm_fine_phaserangerates(const uint8_t buff[],
  *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  *          - RC_INVALID_MESSAGE : Cell mask too large
  */
-static rtcm3_rc rtcm3_decode_msm_internal(const uint8_t buff[],
-                                          rtcm_msm_message *msg) {
-  uint16_t bit = 0;
-  bit += rtcm3_read_msm_header(buff, &msg->header);
+static int8_t rtcm3_decode_msm_internal(const uint8_t buff[],
+                                        rtcm_msm_message *msg) {
+  msg->header.msg_num = getbitu(buff, 0, 12);
 
   msm_enum msm_type = to_msm_type(msg->header.msg_num);
 
@@ -1018,10 +1026,13 @@ static rtcm3_rc rtcm3_decode_msm_internal(const uint8_t buff[],
   }
 
   constellation_t cons = to_constellation(msg->header.msg_num);
-  if (CONSTELLATION_GPS != cons) {
+  if (CONSTELLATION_INVALID == cons) {
     /* Unexpected message type. */
     return RC_MESSAGE_TYPE_MISMATCH;
   }
+
+  uint16_t bit = 0;
+  bit += rtcm3_read_msm_header(buff, cons, &msg->header);
 
   uint8_t num_sats =
       count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
