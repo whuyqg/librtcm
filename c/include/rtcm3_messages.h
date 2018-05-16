@@ -47,7 +47,7 @@ typedef enum rtcm3_rc_e {
   RC_OK = 0,
   RC_MESSAGE_TYPE_MISMATCH = -1,
   RC_INVALID_MESSAGE = -2
-} rtcm3_rc_t;
+} rtcm3_rc;
 
 typedef struct {
   uint16_t msg_num; /* Msg Num DF002 uint16 12*/

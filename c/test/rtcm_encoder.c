@@ -58,7 +58,7 @@ static uint8_t to_msm_lock_ind(double time) {
 void encode_basic_freq_data(const rtcm_freq_data *freq_data,
                             const double freq,
                             const double *l1_pr,
-                            uint8_t *buff,
+                            uint8_t buff[],
                             uint16_t *bit) {
   /* Calculate GPS Integer L1 Pseudorange Modulus Ambiguity (DF014). */
   uint8_t amb = (uint8_t)(*l1_pr / PRUNIT_GPS);
@@ -106,7 +106,7 @@ void encode_basic_glo_freq_data(const rtcm_freq_data *freq_data,
                                 const double freq,
                                 const double *l1_pr,
                                 const uint8_t fcn,
-                                uint8_t *buff,
+                                uint8_t buff[],
                                 uint16_t *bit) {
   bool L1 = fabs(freq - GLO_L1_FREQ) < 0.01;
   /* Calculate GPS Integer L1 Pseudorange Modulus Ambiguity (DF044). */
@@ -197,7 +197,7 @@ void encode_basic_glo_freq_data(const rtcm_freq_data *freq_data,
  */
 uint16_t rtcm3_write_header(const rtcm_obs_header *header,
                             uint8_t num_sats,
-                            uint8_t *buff) {
+                            uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, header->msg_num);
   bit += 12;
@@ -257,7 +257,7 @@ uint16_t rtcm3_write_header(const rtcm_obs_header *header,
  */
 uint16_t rtcm3_write_glo_header(const rtcm_obs_header *header,
                                 uint8_t num_sats,
-                                uint8_t *buff) {
+                                uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, header->msg_num);
   bit += 12;
@@ -276,7 +276,7 @@ uint16_t rtcm3_write_glo_header(const rtcm_obs_header *header,
   return bit;
 }
 
-uint16_t rtcm3_encode_1001(const rtcm_obs_message *msg_1001, uint8_t *buff) {
+uint16_t rtcm3_encode_1001(const rtcm_obs_message *msg_1001, uint8_t buff[]) {
   uint16_t bit = 64; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -312,7 +312,7 @@ uint16_t rtcm3_encode_1001(const rtcm_obs_message *msg_1001, uint8_t *buff) {
  * \param sync Synchronous GNSS Flag (DF005).
  * \return The message length in bytes.
  */
-uint16_t rtcm3_encode_1002(const rtcm_obs_message *msg_1002, uint8_t *buff) {
+uint16_t rtcm3_encode_1002(const rtcm_obs_message *msg_1002, uint8_t buff[]) {
   uint16_t bit = 64; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -348,7 +348,7 @@ uint16_t rtcm3_encode_1002(const rtcm_obs_message *msg_1002, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1003(const rtcm_obs_message *msg_1003, uint8_t *buff) {
+uint16_t rtcm3_encode_1003(const rtcm_obs_message *msg_1003, uint8_t buff[]) {
   uint16_t bit = 64; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -379,7 +379,7 @@ uint16_t rtcm3_encode_1003(const rtcm_obs_message *msg_1003, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1004(const rtcm_obs_message *msg_1004, uint8_t *buff) {
+uint16_t rtcm3_encode_1004(const rtcm_obs_message *msg_1004, uint8_t buff[]) {
   uint16_t bit = 64; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -429,7 +429,7 @@ uint16_t rtcm3_encode_1004(const rtcm_obs_message *msg_1004, uint8_t *buff) {
 }
 
 uint16_t rtcm3_encode_1005_base(const rtcm_msg_1005 *msg_1005,
-                                uint8_t *buff,
+                                uint8_t buff[],
                                 uint16_t *bit) {
   setbitu(buff, *bit, 12, msg_1005->stn_id);
   *bit += 12;
@@ -460,14 +460,14 @@ uint16_t rtcm3_encode_1005_base(const rtcm_msg_1005 *msg_1005,
   return (*bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1005(const rtcm_msg_1005 *msg_1005, uint8_t *buff) {
+uint16_t rtcm3_encode_1005(const rtcm_msg_1005 *msg_1005, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1005);
   bit += 12;
   return rtcm3_encode_1005_base(msg_1005, buff, &bit);
 }
 
-uint16_t rtcm3_encode_1006(const rtcm_msg_1006 *msg_1006, uint8_t *buff) {
+uint16_t rtcm3_encode_1006(const rtcm_msg_1006 *msg_1006, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1006);
   bit += 12;
@@ -480,7 +480,7 @@ uint16_t rtcm3_encode_1006(const rtcm_msg_1006 *msg_1006, uint8_t *buff) {
 }
 
 uint16_t rtcm3_encode_1007_base(const rtcm_msg_1007 *msg_1007,
-                                uint8_t *buff,
+                                uint8_t buff[],
                                 uint16_t *bit) {
   setbitu(buff, *bit, 12, msg_1007->stn_id);
   *bit += 12;
@@ -497,14 +497,14 @@ uint16_t rtcm3_encode_1007_base(const rtcm_msg_1007 *msg_1007,
   return (*bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1007(const rtcm_msg_1007 *msg_1007, uint8_t *buff) {
+uint16_t rtcm3_encode_1007(const rtcm_msg_1007 *msg_1007, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1007);
   bit += 12;
   return rtcm3_encode_1007_base(msg_1007, buff, &bit);
 }
 
-uint16_t rtcm3_encode_1008(const rtcm_msg_1008 *msg_1008, uint8_t *buff) {
+uint16_t rtcm3_encode_1008(const rtcm_msg_1008 *msg_1008, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1008);
   bit += 12;
@@ -520,7 +520,7 @@ uint16_t rtcm3_encode_1008(const rtcm_msg_1008 *msg_1008, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1010(const rtcm_obs_message *msg_1010, uint8_t *buff) {
+uint16_t rtcm3_encode_1010(const rtcm_obs_message *msg_1010, uint8_t buff[]) {
   uint16_t bit = 61; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -554,7 +554,7 @@ uint16_t rtcm3_encode_1010(const rtcm_obs_message *msg_1010, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t *buff) {
+uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t buff[]) {
   uint16_t bit = 61; /* Start at end of header. */
 
   uint8_t num_sats = 0;
@@ -599,7 +599,7 @@ uint16_t rtcm3_encode_1012(const rtcm_obs_message *msg_1012, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1029(const rtcm_msg_1029 *msg_1029, uint8_t *buff) {
+uint16_t rtcm3_encode_1029(const rtcm_msg_1029 *msg_1029, uint8_t buff[]) {
   uint16_t bit = 0, byte = 0;
 
   setbitu(buff, bit, 12, 1029);
@@ -628,7 +628,7 @@ uint16_t rtcm3_encode_1029(const rtcm_msg_1029 *msg_1029, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1033(const rtcm_msg_1033 *msg_1033, uint8_t *buff) {
+uint16_t rtcm3_encode_1033(const rtcm_msg_1033 *msg_1033, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1033);
   bit += 12;
@@ -677,7 +677,7 @@ uint16_t rtcm3_encode_1033(const rtcm_msg_1033 *msg_1033, uint8_t *buff) {
   return (bit + 7) / 8;
 }
 
-uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t *buff) {
+uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, 1230);
   bit += 12;
@@ -716,7 +716,7 @@ uint16_t rtcm3_encode_1230(const rtcm_msg_1230 *msg_1230, uint8_t *buff) {
 }
 
 static uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header,
-                                        uint8_t *buff) {
+                                        uint8_t buff[]) {
   uint16_t bit = 0;
   setbitu(buff, bit, 12, header->msg_num);
   bit += 12;
@@ -763,7 +763,7 @@ static uint16_t rtcm3_encode_msm_header(const rtcm_msm_header *header,
 static void encode_msm_fine_pseudoranges(const uint8_t num_cells,
                                          const double fine_pr[],
                                          const flag_bf flags[],
-                                         uint8_t *buff,
+                                         uint8_t buff[],
                                          uint16_t *bit) {
   /* DF400 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -780,7 +780,7 @@ static void encode_msm_fine_pseudoranges(const uint8_t num_cells,
 static void encode_msm_fine_phaseranges(const uint8_t num_cells,
                                         const double fine_cp[],
                                         const flag_bf flags[],
-                                        uint8_t *buff,
+                                        uint8_t buff[],
                                         uint16_t *bit) {
   /* DF401 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -797,7 +797,7 @@ static void encode_msm_fine_phaseranges(const uint8_t num_cells,
 static void encode_msm_lock_times(const uint8_t num_cells,
                                   const double lock_time[],
                                   const flag_bf flags[],
-                                  uint8_t *buff,
+                                  uint8_t buff[],
                                   uint16_t *bit) {
   /* DF402 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -812,7 +812,7 @@ static void encode_msm_lock_times(const uint8_t num_cells,
 
 static void encode_msm_hca_indicators(const uint8_t num_cells,
                                       const bool hca_indicator[],
-                                      uint8_t *buff,
+                                      uint8_t buff[],
                                       uint16_t *bit) {
   /* DF420 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -824,7 +824,7 @@ static void encode_msm_hca_indicators(const uint8_t num_cells,
 static void encode_msm_cnrs(const uint8_t num_cells,
                             const double cnr[],
                             const flag_bf flags[],
-                            uint8_t *buff,
+                            uint8_t buff[],
                             uint16_t *bit) {
   /* DF403 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -840,7 +840,7 @@ static void encode_msm_cnrs(const uint8_t num_cells,
 static void encode_msm_fine_phaserangerates(const uint8_t num_cells,
                                             const double fine_dop[],
                                             const flag_bf flags[],
-                                            uint8_t *buff,
+                                            uint8_t buff[],
                                             uint16_t *bit) {
   /* DF404 */
   for (uint16_t i = 0; i < num_cells; i++) {
@@ -854,9 +854,15 @@ static void encode_msm_fine_phaserangerates(const uint8_t num_cells,
   }
 }
 
-/* Basic GPS MSM4/5 encoder
- * returns the number of bytes written */
-uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
+/** Basic GPS MSM4/5 encoder
+ *
+ * \param msg The input RTCM message struct
+ * \param buff Data buffer large enough to hold the message (at worst 742 bytes)
+ *             (see RTCM 10403.3 Table 3.5-71)
+ * \return Number of bytes written
+ */
+
+uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t buff[]) {
   const rtcm_msm_header *header = &msg->header;
 
   msm_enum msm_type = to_msm_type(header->msg_num);
@@ -882,7 +888,6 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   /* Satellite Data */
 
   uint8_t integer_ms[num_sats];
-  double range_modulo_ms[num_sats];
   double rough_range_m[num_sats];
   double rough_rate_m_s[num_sats];
 
@@ -904,8 +909,8 @@ uint16_t rtcm3_encode_msm(const rtcm_msm_message *msg, uint8_t *buff) {
   for (uint8_t i = 0; i < num_sats; i++) {
     double pr = msg->sats[i].rough_range_m / PRUNIT_GPS;
     /* remove integer ms part */
-    range_modulo_ms[i] = pr - integer_ms[i];
-    uint16_t range_modulo_encoded = (uint16_t)round(1024 * range_modulo_ms[i]);
+    double range_modulo_ms = pr - integer_ms[i];
+    uint16_t range_modulo_encoded = (uint16_t)round(1024 * range_modulo_ms);
     setbitu(buff, bit, 10, range_modulo_encoded);
     bit += 10;
 

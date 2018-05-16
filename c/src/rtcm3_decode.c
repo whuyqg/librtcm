@@ -67,7 +67,7 @@ static uint32_t from_msm_lock_ind_ext(uint16_t lock) {
   return 67108864;
 }
 
-void decode_basic_gps_l1_freq_data(const uint8_t *buff,
+void decode_basic_gps_l1_freq_data(const uint8_t buff[],
                                    uint16_t *bit,
                                    rtcm_freq_data *freq_data,
                                    uint32_t *pr,
@@ -86,7 +86,7 @@ void decode_basic_gps_l1_freq_data(const uint8_t *buff,
   return;
 }
 
-void decode_basic_glo_l1_freq_data(const uint8_t *buff,
+void decode_basic_glo_l1_freq_data(const uint8_t buff[],
                                    uint16_t *bit,
                                    rtcm_freq_data *freq_data,
                                    uint32_t *pr,
@@ -106,7 +106,7 @@ void decode_basic_glo_l1_freq_data(const uint8_t *buff,
   return;
 }
 
-void decode_basic_l2_freq_data(const uint8_t *buff,
+void decode_basic_l2_freq_data(const uint8_t buff[],
                                uint16_t *bit,
                                rtcm_freq_data *freq_data,
                                int32_t *pr,
@@ -125,7 +125,7 @@ void decode_basic_l2_freq_data(const uint8_t *buff,
   return;
 }
 
-uint16_t rtcm3_read_header(const uint8_t *buff, rtcm_obs_header *header) {
+uint16_t rtcm3_read_header(const uint8_t buff[], rtcm_obs_header *header) {
   uint16_t bit = 0;
   header->msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -144,7 +144,7 @@ uint16_t rtcm3_read_header(const uint8_t *buff, rtcm_obs_header *header) {
   return bit;
 }
 
-uint16_t rtcm3_read_glo_header(const uint8_t *buff, rtcm_obs_header *header) {
+uint16_t rtcm3_read_glo_header(const uint8_t buff[], rtcm_obs_header *header) {
   uint16_t bit = 0;
   header->msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -163,7 +163,7 @@ uint16_t rtcm3_read_glo_header(const uint8_t *buff, rtcm_obs_header *header) {
   return bit;
 }
 
-static uint16_t rtcm3_read_msm_header(const uint8_t *buff,
+static uint16_t rtcm3_read_msm_header(const uint8_t buff[],
                                       rtcm_msm_header *header) {
   uint16_t bit = 0;
   header->msg_num = getbitu(buff, bit, 12);
@@ -250,7 +250,9 @@ uint8_t construct_L2_phase(rtcm_freq_data *l2_freq_data,
   return 0;
 }
 
-uint8_t get_cnr(rtcm_freq_data *freq_data, const uint8_t *buff, uint16_t *bit) {
+uint8_t get_cnr(rtcm_freq_data *freq_data,
+                const uint8_t buff[],
+                uint16_t *bit) {
   uint8_t cnr = getbitu(buff, *bit, 8);
   *bit += 8;
   if (cnr == 0) {
@@ -268,7 +270,7 @@ uint8_t get_cnr(rtcm_freq_data *freq_data, const uint8_t *buff, uint16_t *bit) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001) {
+rtcm3_rc rtcm3_decode_1001(const uint8_t buff[], rtcm_obs_message *msg_1001) {
   uint16_t bit = 0;
   bit += rtcm3_read_header(buff, &msg_1001->header);
 
@@ -305,7 +307,7 @@ int8_t rtcm3_decode_1001(const uint8_t *buff, rtcm_obs_message *msg_1001) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002) {
+rtcm3_rc rtcm3_decode_1002(const uint8_t buff[], rtcm_obs_message *msg_1002) {
   uint16_t bit = 0;
   bit += rtcm3_read_header(buff, &msg_1002->header);
 
@@ -346,7 +348,7 @@ int8_t rtcm3_decode_1002(const uint8_t *buff, rtcm_obs_message *msg_1002) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1003(const uint8_t *buff, rtcm_obs_message *msg_1003) {
+rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
   uint16_t bit = 0;
   bit += rtcm3_read_header(buff, &msg_1003->header);
 
@@ -393,7 +395,7 @@ int8_t rtcm3_decode_1003(const uint8_t *buff, rtcm_obs_message *msg_1003) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1004(const uint8_t *buff, rtcm_obs_message *msg_1004) {
+rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
   uint16_t bit = 0;
   bit += rtcm3_read_header(buff, &msg_1004->header);
 
@@ -438,9 +440,9 @@ int8_t rtcm3_decode_1004(const uint8_t *buff, rtcm_obs_message *msg_1004) {
   return RC_OK;
 }
 
-int8_t rtcm3_decode_1005_base(const uint8_t *buff,
-                              rtcm_msg_1005 *msg_1005,
-                              uint16_t *bit) {
+rtcm3_rc rtcm3_decode_1005_base(const uint8_t buff[],
+                                rtcm_msg_1005 *msg_1005,
+                                uint16_t *bit) {
   msg_1005->stn_id = getbitu(buff, *bit, 12);
   *bit += 12;
   msg_1005->ITRF = getbitu(buff, *bit, 6);
@@ -477,7 +479,7 @@ int8_t rtcm3_decode_1005_base(const uint8_t *buff,
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1005(const uint8_t *buff, rtcm_msg_1005 *msg_1005) {
+rtcm3_rc rtcm3_decode_1005(const uint8_t buff[], rtcm_msg_1005 *msg_1005) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -497,7 +499,7 @@ int8_t rtcm3_decode_1005(const uint8_t *buff, rtcm_msg_1005 *msg_1005) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1006(const uint8_t *buff, rtcm_msg_1006 *msg_1006) {
+rtcm3_rc rtcm3_decode_1006(const uint8_t buff[], rtcm_msg_1006 *msg_1006) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -511,9 +513,9 @@ int8_t rtcm3_decode_1006(const uint8_t *buff, rtcm_msg_1006 *msg_1006) {
   return RC_OK;
 }
 
-int8_t rtcm3_decode_1007_base(const uint8_t *buff,
-                              rtcm_msg_1007 *msg_1007,
-                              uint16_t *bit) {
+rtcm3_rc rtcm3_decode_1007_base(const uint8_t buff[],
+                                rtcm_msg_1007 *msg_1007,
+                                uint16_t *bit) {
   msg_1007->stn_id = getbitu(buff, *bit, 12);
   *bit += 12;
   msg_1007->desc_count = getbitu(buff, *bit, 8);
@@ -536,7 +538,7 @@ int8_t rtcm3_decode_1007_base(const uint8_t *buff,
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1007(const uint8_t *buff, rtcm_msg_1007 *msg_1007) {
+rtcm3_rc rtcm3_decode_1007(const uint8_t buff[], rtcm_msg_1007 *msg_1007) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -557,7 +559,7 @@ int8_t rtcm3_decode_1007(const uint8_t *buff, rtcm_msg_1007 *msg_1007) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1008(const uint8_t *buff, rtcm_msg_1008 *msg_1008) {
+rtcm3_rc rtcm3_decode_1008(const uint8_t buff[], rtcm_msg_1008 *msg_1008) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -583,7 +585,7 @@ int8_t rtcm3_decode_1008(const uint8_t *buff, rtcm_msg_1008 *msg_1008) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1010(const uint8_t *buff, rtcm_obs_message *msg_1010) {
+rtcm3_rc rtcm3_decode_1010(const uint8_t buff[], rtcm_obs_message *msg_1010) {
   uint16_t bit = 0;
   bit += rtcm3_read_glo_header(buff, &msg_1010->header);
 
@@ -626,7 +628,7 @@ int8_t rtcm3_decode_1010(const uint8_t *buff, rtcm_obs_message *msg_1010) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1012(const uint8_t *buff, rtcm_obs_message *msg_1012) {
+rtcm3_rc rtcm3_decode_1012(const uint8_t buff[], rtcm_obs_message *msg_1012) {
   uint16_t bit = 0;
   bit += rtcm3_read_glo_header(buff, &msg_1012->header);
 
@@ -683,7 +685,7 @@ int8_t rtcm3_decode_1012(const uint8_t *buff, rtcm_obs_message *msg_1012) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1029(const uint8_t *buff, rtcm_msg_1029 *msg_1029) {
+rtcm3_rc rtcm3_decode_1029(const uint8_t buff[], rtcm_msg_1029 *msg_1029) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -721,7 +723,7 @@ int8_t rtcm3_decode_1029(const uint8_t *buff, rtcm_msg_1029 *msg_1029) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1033(const uint8_t *buff, rtcm_msg_1033 *msg_1033) {
+rtcm3_rc rtcm3_decode_1033(const uint8_t buff[], rtcm_msg_1033 *msg_1033) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -781,7 +783,7 @@ int8_t rtcm3_decode_1033(const uint8_t *buff, rtcm_msg_1033 *msg_1033) {
  *         Returns a negative number if the message is invalid:
  *          - `-1` : Message type mismatch
  */
-int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
+rtcm3_rc rtcm3_decode_1230(const uint8_t buff[], rtcm_msg_1230 *msg_1230) {
   uint16_t bit = 0;
   uint16_t msg_num = getbitu(buff, bit, 12);
   bit += 12;
@@ -817,7 +819,7 @@ int8_t rtcm3_decode_1230(const uint8_t *buff, rtcm_msg_1230 *msg_1230) {
   return RC_OK;
 }
 
-static void decode_msm_sat_data(const uint8_t *buff,
+static void decode_msm_sat_data(const uint8_t buff[],
                                 const uint8_t num_sats,
                                 const msm_enum msm_type,
                                 double rough_range[],
@@ -870,7 +872,7 @@ static void decode_msm_sat_data(const uint8_t *buff,
   }
 }
 
-static void decode_msm_fine_pseudoranges(const uint8_t *buff,
+static void decode_msm_fine_pseudoranges(const uint8_t buff[],
                                          const uint8_t num_cells,
                                          double fine_pr[],
                                          flag_bf flags[],
@@ -884,7 +886,7 @@ static void decode_msm_fine_pseudoranges(const uint8_t *buff,
   }
 }
 
-static void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
+static void decode_msm_fine_pseudoranges_extended(const uint8_t buff[],
                                                   const uint8_t num_cells,
                                                   double fine_pr[],
                                                   flag_bf flags[],
@@ -898,7 +900,7 @@ static void decode_msm_fine_pseudoranges_extended(const uint8_t *buff,
   }
 }
 
-static void decode_msm_fine_phaseranges(const uint8_t *buff,
+static void decode_msm_fine_phaseranges(const uint8_t buff[],
                                         const uint8_t num_cells,
                                         double fine_cp[],
                                         flag_bf flags[],
@@ -912,7 +914,7 @@ static void decode_msm_fine_phaseranges(const uint8_t *buff,
   }
 }
 
-static void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
+static void decode_msm_fine_phaseranges_extended(const uint8_t buff[],
                                                  const uint8_t num_cells,
                                                  double fine_cp[],
                                                  flag_bf flags[],
@@ -926,7 +928,7 @@ static void decode_msm_fine_phaseranges_extended(const uint8_t *buff,
   }
 }
 
-static void decode_msm_lock_times(const uint8_t *buff,
+static void decode_msm_lock_times(const uint8_t buff[],
                                   const uint8_t num_cells,
                                   double lock_time[],
                                   flag_bf flags[],
@@ -940,7 +942,7 @@ static void decode_msm_lock_times(const uint8_t *buff,
   }
 }
 
-static void decode_msm_lock_times_extended(const uint8_t *buff,
+static void decode_msm_lock_times_extended(const uint8_t buff[],
                                            const uint8_t num_cells,
                                            double lock_time[],
                                            flag_bf flags[],
@@ -954,7 +956,7 @@ static void decode_msm_lock_times_extended(const uint8_t *buff,
   }
 }
 
-static void decode_msm_hca_indicators(const uint8_t *buff,
+static void decode_msm_hca_indicators(const uint8_t buff[],
                                       const uint8_t num_cells,
                                       bool hca_indicator[],
                                       uint16_t *bit) {
@@ -965,7 +967,7 @@ static void decode_msm_hca_indicators(const uint8_t *buff,
   }
 }
 
-static void decode_msm_cnrs(const uint8_t *buff,
+static void decode_msm_cnrs(const uint8_t buff[],
                             const uint8_t num_cells,
                             double cnr[],
                             flag_bf flags[],
@@ -979,7 +981,7 @@ static void decode_msm_cnrs(const uint8_t *buff,
   }
 }
 
-static void decode_msm_cnrs_extended(const uint8_t *buff,
+static void decode_msm_cnrs_extended(const uint8_t buff[],
                                      const uint8_t num_cells,
                                      double cnr[],
                                      flag_bf flags[],
@@ -993,7 +995,7 @@ static void decode_msm_cnrs_extended(const uint8_t *buff,
   }
 }
 
-static void decode_msm_fine_phaserangerates(const uint8_t *buff,
+static void decode_msm_fine_phaserangerates(const uint8_t buff[],
                                             const uint8_t num_cells,
                                             double *fine_dop,
                                             flag_bf *flags,
@@ -1016,8 +1018,8 @@ static void decode_msm_fine_phaserangerates(const uint8_t *buff,
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
-                                        rtcm_msm_message *msg) {
+static rtcm3_rc rtcm3_decode_msm_internal(const uint8_t buff[],
+                                          rtcm_msm_message *msg) {
   uint16_t bit = 0;
   bit += rtcm3_read_msm_header(buff, &msg->header);
 
@@ -1156,7 +1158,7 @@ static int8_t rtcm3_decode_msm_internal(const uint8_t *buff,
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm4(const uint8_t *buff, rtcm_msm_message *msg) {
+rtcm3_rc rtcm3_decode_msm4(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
   if (MSM4 == to_msm_type(msg->header.msg_num)) {
     return ret;
@@ -1175,7 +1177,7 @@ int8_t rtcm3_decode_msm4(const uint8_t *buff, rtcm_msm_message *msg) {
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm5(const uint8_t *buff, rtcm_msm_message *msg) {
+rtcm3_rc rtcm3_decode_msm5(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
   if (MSM5 == to_msm_type(msg->header.msg_num)) {
     return ret;
@@ -1194,7 +1196,7 @@ int8_t rtcm3_decode_msm5(const uint8_t *buff, rtcm_msm_message *msg) {
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm6(const uint8_t *buff, rtcm_msm_message *msg) {
+rtcm3_rc rtcm3_decode_msm6(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
   if (MSM6 == to_msm_type(msg->header.msg_num)) {
     return ret;
@@ -1213,7 +1215,7 @@ int8_t rtcm3_decode_msm6(const uint8_t *buff, rtcm_msm_message *msg) {
  *          - `-1` : Message type mismatch
  *          - `-2` : Cell mask too large
  */
-int8_t rtcm3_decode_msm7(const uint8_t *buff, rtcm_msm_message *msg) {
+rtcm3_rc rtcm3_decode_msm7(const uint8_t buff[], rtcm_msm_message *msg) {
   int8_t ret = rtcm3_decode_msm_internal(buff, msg);
   if (MSM7 == to_msm_type(msg->header.msg_num)) {
     return ret;

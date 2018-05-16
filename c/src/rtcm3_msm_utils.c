@@ -14,7 +14,7 @@
 
 double msm_signal_frequency(const constellation_t cons,
                             const uint8_t signal_index,
-                            const bool signal_mask[MSM_SIGNAL_MASK_SIZE],
+                            const bool signal_mask[],
                             const uint8_t sat_info) {
   (void)signal_mask;
   (void)sat_info;
@@ -23,7 +23,7 @@ double msm_signal_frequency(const constellation_t cons,
 
   switch (cons) {
     case CONSTELLATION_GPS:
-      if (signal_index == 0) {
+      if (0 == signal_index) {
         return GPS_L1_FREQ;
       } else {
         return GPS_L2_FREQ;
@@ -91,7 +91,7 @@ constellation_t to_constellation(uint16_t msg_num) {
   return CONSTELLATION_INVALID;
 }
 
-uint8_t count_mask_bits(uint16_t mask_size, const bool mask[mask_size]) {
+uint8_t count_mask_bits(uint16_t mask_size, const bool mask[]) {
   uint8_t ret = 0;
   for (uint16_t i = 0; i < mask_size; i++) {
     ret += mask[i];
