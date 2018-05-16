@@ -292,7 +292,7 @@ rtcm3_rc rtcm3_decode_1001(const uint8_t buff[], rtcm_obs_message *msg_1001) {
 
     l1_freq_data->flags.valid_pr = construct_L1_code(l1_freq_data, l1_pr, 0);
     l1_freq_data->flags.valid_cp =
-        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
+        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_HZ);
   }
 
   return RC_OK;
@@ -332,7 +332,7 @@ rtcm3_rc rtcm3_decode_1002(const uint8_t buff[], rtcm_obs_message *msg_1002) {
     l1_freq_data->flags.valid_pr =
         construct_L1_code(l1_freq_data, l1_pr, amb * PRUNIT_GPS);
     l1_freq_data->flags.valid_cp =
-        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
+        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_HZ);
   }
 
   return RC_OK;
@@ -369,7 +369,7 @@ rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
 
     l1_freq_data->flags.valid_pr = construct_L1_code(l1_freq_data, l1_pr, 0);
     l1_freq_data->flags.valid_cp =
-        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
+        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_HZ);
 
     rtcm_freq_data *l2_freq_data = &msg_1003->sats[i].obs[L2_FREQ];
 
@@ -378,7 +378,7 @@ rtcm3_rc rtcm3_decode_1003(const uint8_t buff[], rtcm_obs_message *msg_1003) {
     l2_freq_data->flags.valid_pr =
         construct_L2_code(l2_freq_data, l1_freq_data, l2_pr);
     l2_freq_data->flags.valid_cp = construct_L2_phase(
-        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_FREQ);
+        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
   }
 
   return RC_OK;
@@ -420,7 +420,7 @@ rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
     l1_freq_data->flags.valid_pr =
         construct_L1_code(l1_freq_data, l1_pr, amb * PRUNIT_GPS);
     l1_freq_data->flags.valid_cp =
-        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_FREQ);
+        construct_L1_phase(l1_freq_data, phr_pr_diff, GPS_L1_HZ);
 
     rtcm_freq_data *l2_freq_data = &msg_1004->sats[i].obs[L2_FREQ];
 
@@ -430,7 +430,7 @@ rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
     l2_freq_data->flags.valid_pr =
         construct_L2_code(l2_freq_data, l1_freq_data, l2_pr);
     l2_freq_data->flags.valid_cp = construct_L2_phase(
-        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_FREQ);
+        l2_freq_data, l1_freq_data, phr_pr_diff, GPS_L2_HZ);
   }
 
   return RC_OK;
@@ -605,7 +605,7 @@ rtcm3_rc rtcm3_decode_1010(const uint8_t buff[], rtcm_obs_message *msg_1010) {
     l1_freq_data->flags.valid_pr =
         construct_L1_code(l1_freq_data, l1_pr, PRUNIT_GLO * amb);
     l1_freq_data->flags.valid_cp = construct_L1_phase(
-        l1_freq_data, phr_pr_diff, GLO_L1_FREQ + glo_fcn * GLO_L1_CH_OFFSET);
+        l1_freq_data, phr_pr_diff, GLO_L1_HZ + glo_fcn * GLO_L1_DELTA_HZ);
   }
 
   return RC_OK;
@@ -648,7 +648,7 @@ rtcm3_rc rtcm3_decode_1012(const uint8_t buff[], rtcm_obs_message *msg_1012) {
     l1_freq_data->flags.valid_pr =
         construct_L1_code(l1_freq_data, l1_pr, amb * PRUNIT_GLO);
     l1_freq_data->flags.valid_cp = construct_L1_phase(
-        l1_freq_data, phr_pr_diff, GLO_L1_FREQ + glo_fcn * GLO_L1_CH_OFFSET);
+        l1_freq_data, phr_pr_diff, GLO_L1_HZ + glo_fcn * GLO_L1_DELTA_HZ);
 
     rtcm_freq_data *l2_freq_data = &msg_1012->sats[i].obs[L2_FREQ];
 
@@ -661,7 +661,7 @@ rtcm3_rc rtcm3_decode_1012(const uint8_t buff[], rtcm_obs_message *msg_1012) {
         construct_L2_phase(l2_freq_data,
                            l1_freq_data,
                            phr_pr_diff,
-                           GLO_L2_FREQ + glo_fcn * GLO_L2_CH_OFFSET);
+                           GLO_L2_HZ + glo_fcn * GLO_L2_DELTA_HZ);
   }
 
   return RC_OK;
