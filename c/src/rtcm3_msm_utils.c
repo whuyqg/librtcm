@@ -150,17 +150,21 @@ static code_t get_msm_gps_code(uint8_t signal_id) {
       return CODE_GPS_L2P;
     /* case 10: 2W */
     case 15: /* 2S */
-    case 16: /* 2L */
-    case 17: /* 2X */
       return CODE_GPS_L2CM;
-    /* case 22: 5I */
-    /* case 23: 5Q */
-    /* case 24: 5X */
+    case 16: /* 2L */
+      return CODE_GPS_L2CL;
+    case 17: /* 2X */
+      return CODE_GPS_L2CX;
+    case 22: /* 5I */
+      return CODE_GPS_L5I;
+    case 23: /* 5Q */
+      return CODE_GPS_L5Q;
+    case 24: /* 5X */
+      return CODE_GPS_L5X;
     /* case 30: 1S */
     /* case 31: 1L */
     /* case 32: 1X */
     default:
-      /* other GPS codes not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -173,14 +177,13 @@ static uint8_t get_msm_glo_prn(uint8_t sat_id) {
 static code_t get_msm_glo_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-96 */
   switch (signal_id) {
-    case 2:
+    case 2: /* 1C */
       return CODE_GLO_L1OF;
-    /* case 3: CODE_GLO_L1P; */
-    case 8:
+    /* case 3: 1P */
+    case 8: /* 2C */
       return CODE_GLO_L2OF;
-    /* case 9: CODE_GLO_L2P; */
+    /* case 9: 2P */
     default:
-      /* other GLO codes not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -199,27 +202,39 @@ static uint8_t get_msm_gal_prn(uint8_t sat_id) {
 static code_t get_msm_gal_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-99 */
   switch (signal_id) {
-    /* case 2: 1C */
+    case 2: /* 1C */
+      return CODE_GAL_E1C;
     /* case 3: 1A */
-    /* case 4: 1B */
-    /* case 5: 1X */
+    case 4: /* 1B */
+      return CODE_GAL_E1B;
+    case 5: /* 1X */
+      return CODE_GAL_E1X;
     /* case 6: 1Z */
-    /* case 8: 6C */
+    case 8: /* 6C */
+      return CODE_GAL_E6C;
     /* case 9: 6A */
-    /* case 10: 6B */
-    /* case 11: 6X */
+    case 10: /* 6B */
+      return CODE_GAL_E6B;
+    case 11: /* 6X */
+      return CODE_GAL_E6X;
     /* case 12: 6Z */
-    /* case 14: 7I */
-    /* case 15: 7Q */
-    /* case 16: 7X */
-    /* case 18: 8I */
-    /* case 19: 8Q */
-    /* case 20: 8X */
-    /* case 22: 5I */
-    /* case 23: 5Q */
-    /* case 24: 5X */
+    case 14: /* 7I */
+      return CODE_GAL_E7I;
+    case 15: /* 7Q */
+      return CODE_GAL_E7Q;
+    case 16: /* 7X */
+      return CODE_GAL_E7X;
+    case 18:              /* 8I */
+    case 19:              /* 8Q */
+    case 20:              /* 8X */
+      return CODE_GAL_E8; /* ? */
+    case 22:              /* 5I */
+      return CODE_GAL_E5I;
+    case 23: /* 5Q */
+      return CODE_GAL_E5Q;
+    case 24: /* 5X */
+      return CODE_GAL_E5X;
     default:
-      /* GAL not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -232,12 +247,12 @@ static uint8_t get_msm_sbas_prn(uint8_t sat_id) {
 static code_t get_msm_sbas_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-102 */
   switch (signal_id) {
-    /* case 2: 1C */
+    case 2: /* 1C */
+      return CODE_SBAS_L1CA;
     /* case 22: 5I */
     /* case 23: 5Q */
     /* case 24: 5X */
     default:
-      /* SBAS observations not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -250,21 +265,27 @@ static uint8_t get_msm_qzs_prn(uint8_t sat_id) {
 static code_t get_msm_qzs_code(uint8_t signal_id) {
   /* RTCM 10403.3 Table 3.5-105 */
   switch (signal_id) {
-    /* case 2: 1C */
+    case 2: /* 1C */
+      return CODE_QZS_L1CA;
     /* case 9:  6S */
     /* case 10: 6L */
     /* case 11: 6X */
-    /* case 15: 2S */
-    /* case 16: 2L */
-    /* case 17: 2X */
-    /* case 22: 5I */
-    /* case 23: 5Q */
-    /* case 24: 5X */
+    case 15: /* 2S */
+      return CODE_QZS_L2CM;
+    case 16: /* 2L */
+      return CODE_QZS_L2CL;
+    case 17: /* 2X */
+      return CODE_QZS_L2CX;
+    case 22: /* 5I */
+      return CODE_QZS_L5I;
+    case 23: /* 5Q */
+      return CODE_QZS_L5Q;
+    case 24: /* 5X */
+      return CODE_QZS_L5X;
     /* case 30: 1S */
     /* case 31: 1L */
     /* case 32: 1X */
     default:
-      /* QZS not supported at this point */
       return CODE_INVALID;
   }
 }
@@ -289,7 +310,6 @@ static code_t get_msm_bds2_code(uint8_t signal_id) {
     /* case 15:  7Q */
     /* case 16:  7X */
     default:
-      /* other BDS2 codes not supported at this point */
       return CODE_INVALID;
   }
 }

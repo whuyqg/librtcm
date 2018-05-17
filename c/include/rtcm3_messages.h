@@ -42,7 +42,7 @@ typedef enum constellation_e {
   CONSTELLATION_COUNT,
 } constellation_t;
 
-/** Code identifier. */
+/** Code identifier (from libswiftnav-private) */
 typedef enum code_e {
   CODE_INVALID = -1,
   CODE_GPS_L1CA = 0,
