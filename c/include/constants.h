@@ -32,12 +32,6 @@
 
 #define CLIGHT 299792458.0 /* speed of light (m/s) */
 
-#define SECS_MS 1000
-#define HOUR_MS (3600 * SECS_MS)
-#define DAY_MS (24 * HOUR_MS)
-
-#define BDS_SECOND_TO_GPS_SECOND 14
-
 /** 2^-4 */
 #define C_1_2P4 0.0625
 /** 2^-24 */

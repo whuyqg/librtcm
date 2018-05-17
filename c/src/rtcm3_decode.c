@@ -172,18 +172,13 @@ static uint16_t rtcm3_read_msm_header(const uint8_t buff[],
   header->stn_id = getbitu(buff, bit, 12);
   bit += 12;
   if (CONSTELLATION_GLO == cons) {
-    /* TODO: do proper glo->gps time conversion */
-    uint8_t day_of_week = getbitu(buff, bit, 3);
+    /* skip the day of week, it is handled in gnss_converters */
     bit += 3;
-    header->tow_ms = getbitu(buff, bit, 27) + day_of_week * DAY_MS -
-                     3 * HOUR_MS + 18 * SECS_MS;
+    /* for GLONASS, the epoch time is the time of day in ms */
+    header->tow_ms = getbitu(buff, bit, 27);
     bit += 27;
-  } else if (CONSTELLATION_BDS2 == cons) {
-    /* BDS system time has a constant offset */
-    header->tow_ms =
-        getbitu(buff, bit, 30) + BDS_SECOND_TO_GPS_SECOND * SECS_MS;
-    bit += 30;
   } else {
+    /* for other systems, epoch time is the time of week in ms */
     header->tow_ms = getbitu(buff, bit, 30);
     bit += 30;
   }
