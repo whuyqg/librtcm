@@ -12,24 +12,6 @@
 
 #include "rtcm3_msm_utils.h"
 
-/* return the position of the nth bit that is set in a 64-bit bitfield */
-static uint8_t get_nth_bit_set(const uint8_t mask_size,
-                               const bool mask[mask_size],
-                               const uint8_t n) {
-  uint8_t ones_found = 0;
-  for (uint8_t pos = 0; pos < 64; pos++) {
-    /* check if the first bit is set */
-    if (mask[pos]) {
-      if (ones_found == n) {
-        /* this is the nth set bit in the field, return its position */
-        return pos;
-      }
-      ones_found++;
-    }
-  }
-  return 0;
-}
-
 double msm_signal_frequency(const rtcm_msm_header *header,
                             const uint8_t signal_index,
                             const uint8_t sat_info) {
@@ -148,14 +130,6 @@ constellation_t to_constellation(uint16_t msg_num) {
     return CONSTELLATION_BDS2;
   }
   return CONSTELLATION_INVALID;
-}
-
-uint8_t count_mask_bits(uint16_t mask_size, const bool mask[]) {
-  uint8_t ret = 0;
-  for (uint16_t i = 0; i < mask_size; i++) {
-    ret += mask[i];
-  }
-  return ret;
 }
 
 static uint8_t get_msm_gps_prn(uint8_t sat_id) {
@@ -320,10 +294,37 @@ static code_t get_msm_bds2_code(uint8_t signal_id) {
   }
 }
 
+/* count the set bits in a Boolean array */
+uint8_t count_mask_bits(uint8_t mask_size, const bool mask[]) {
+  uint8_t ret = 0;
+  for (uint8_t i = 0; i < mask_size; i++) {
+    ret += mask[i];
+  }
+  return ret;
+}
+
+/* return the position of the nth set bit in a Boolean array */
+static uint8_t find_nth_set_bit(const uint8_t mask_size,
+                                const bool mask[],
+                                const uint8_t n) {
+  uint8_t ones_found = 0;
+  for (uint8_t pos = 0; pos < mask_size; pos++) {
+    if (mask[pos]) {
+      if (n == ones_found) {
+        /* this is the nth set bit in the array, return its position */
+        return pos;
+      }
+      ones_found++;
+    }
+  }
+  return 0;
+}
+
 code_t msm_signal_to_code(const rtcm_msm_header *header, uint8_t signal_index) {
   constellation_t cons = to_constellation(header->msg_num);
   uint8_t code_index =
-      get_nth_bit_set(MSM_SIGNAL_MASK_SIZE, header->signal_mask, signal_index) +
+      find_nth_set_bit(
+          MSM_SIGNAL_MASK_SIZE, header->signal_mask, signal_index) +
       1;
 
   switch (cons) {
@@ -348,7 +349,7 @@ code_t msm_signal_to_code(const rtcm_msm_header *header, uint8_t signal_index) {
 
 uint8_t msm_sat_to_prn(const rtcm_msm_header *header, uint8_t satellite_index) {
   constellation_t cons = to_constellation(header->msg_num);
-  uint8_t prn_index = get_nth_bit_set(
+  uint8_t prn_index = find_nth_set_bit(
       MSM_SATELLITE_MASK_SIZE, header->satellite_mask, satellite_index);
 
   switch (cons) {
