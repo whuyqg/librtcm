@@ -86,7 +86,7 @@ rtcm3_rc decode_gps_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   return RC_OK;
 }
 
-/** Decode an RTCMv3 GPS Ephemeris Message
+/** Decode an RTCMv3 GLO Ephemeris Message
  *
  * \param buff The input data buffer
  * \param RTCM message struct
@@ -167,6 +167,135 @@ rtcm3_rc decode_glo_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 1;
   /* reserved */getbitu(buff, *bit, 7);
   *bit += 7;
+
+  return RC_OK;
+}
+
+/** Decode an RTCMv3 BDS Ephemeris Message
+ *
+ * \param buff The input data buffer
+ * \param RTCM message struct
+ * \return  - RC_OK : Success
+ *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
+ *          - RC_INVALID_MESSAGE : Cell mask too large or invalid TOW
+ */
+rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph) {
+  msg_eph->sat_id = getbitu(buff, *bit, 6);
+  *bit += 6;
+  msg_eph->wn = getbitu(buff, *bit, 13);
+  *bit += 13;
+  msg_eph->ura = getbitu(buff, *bit, 4);
+  *bit += 4;
+  msg_eph->kepler.inc_dot = getbits(buff, *bit, 14);
+  *bit += 14;
+  msg_eph->kepler.iode = getbitu(buff, *bit, 5);
+  *bit += 5;
+  msg_eph->kepler.toc = getbitu(buff, *bit, 17);
+  *bit += 17;
+  msg_eph->kepler.af2 = getbits(buff, *bit, 11);
+  *bit += 11;
+  msg_eph->kepler.af1 = getbits(buff, *bit, 22);
+  *bit += 22;
+  msg_eph->kepler.af2 = getbits(buff, *bit, 24);
+  *bit += 24;
+  msg_eph->kepler.iodc = getbitu(buff, *bit, 5);
+  *bit += 5;
+  msg_eph->kepler.crs = getbits(buff, *bit, 18);
+  *bit += 18;
+  msg_eph->kepler.dn = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.m0 = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cuc = getbits(buff, *bit, 18);
+  *bit += 18;
+  msg_eph->kepler.ecc = getbitu(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cus = getbits(buff, *bit, 18);
+  *bit += 18;
+  msg_eph->kepler.sqrta = getbitu(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.toe = getbitu(buff, *bit, 17);
+  *bit += 17;
+  msg_eph->kepler.cic = getbits(buff, *bit, 18);
+  *bit += 18;
+  msg_eph->kepler.omega0 = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cis = getbits(buff, *bit, 18);
+  *bit += 18;
+  /* i0 */ getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.crc = getbits(buff, *bit, 18);
+  *bit += 18;
+  msg_eph->kepler.omega = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.omegadot = getbits(buff, *bit, 24);
+  *bit += 24;
+  msg_eph->kepler.tgd_bds_s[0] = getbits(buff, *bit, 10);
+  *bit += 10;
+  msg_eph->kepler.tgd_bds_s[1] = getbits(buff, *bit, 10);
+  *bit += 10;
+  msg_eph->valid = getbits(buff, *bit, 1);
+  *bit += 1;
+  return RC_OK;
+}
+
+rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph) {
+  msg_eph->sat_id = getbitu(buff, *bit, 6);
+  *bit += 6;
+  msg_eph->wn = getbitu(buff, *bit, 13);
+  *bit += 13;
+  msg_eph->kepler.iode = getbitu(buff, *bit, 10);
+  *bit += 10;
+  /* SISA */ getbitu(buff, *bit, 8);
+  *bit += 8;
+  msg_eph->kepler.inc_dot = getbits(buff, *bit, 14);
+  *bit += 14;
+  msg_eph->kepler.toc = getbitu(buff, *bit, 14);
+  *bit += 14;
+  msg_eph->kepler.af2 = getbits(buff, *bit, 6);
+  *bit += 6;
+  msg_eph->kepler.af1 = getbits(buff, *bit, 21);
+  *bit += 21;
+  msg_eph->kepler.af0 = getbits(buff, *bit, 31);
+  *bit += 31;
+  msg_eph->kepler.crs = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.dn = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.m0 = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cuc = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.ecc = getbitu(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cus = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.sqrta = getbitu(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.toe = getbitu(buff, *bit, 14);
+  *bit += 14;
+  msg_eph->kepler.cic = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.omega0 = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.cis = getbits(buff, *bit, 16);
+  *bit += 16;
+  /* i0 */ getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.crc = getbits(buff, *bit, 16);
+  *bit += 16;
+  msg_eph->kepler.omega = getbits(buff, *bit, 32);
+  *bit += 32;
+  msg_eph->kepler.omegadot = getbits(buff, *bit, 24);
+  *bit += 24;
+  msg_eph->kepler.tgd_gal_s[0] = getbits(buff, *bit, 10);
+  *bit += 10;
+  msg_eph->kepler.tgd_gal_s[1] = getbits(buff, *bit, 10);
+  *bit += 10;
+  msg_eph->health_bits = getbits(buff, *bit, 6);
+  *bit += 6;
+  /* reserved */ getbits(buff, *bit, 2);
+  *bit += 2;
 
   return RC_OK;
 }
