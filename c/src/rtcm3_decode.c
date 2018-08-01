@@ -11,6 +11,7 @@
  */
 
 #include "rtcm3_decode.h"
+#include "rtcm3_eph_decode.h"
 #include <math.h>
 #include <stdio.h>
 #include "bits.h"
@@ -1282,7 +1283,7 @@ rtcm3_rc rtcm3_decode_msm7(const uint8_t buff[], rtcm_msm_message *msg) {
   return rtcm3_decode_msm_internal(buff, MSM7, NULL, msg);
 }
 
-/** Decode an RTCMv3 GPS Ephemeris Message
+/** Decode an RTCMv3 Ephemeris Message
  *
  * \param buff The input data buffer
  * \param RTCM message struct
@@ -1297,76 +1298,16 @@ rtcm3_rc rtcm3_decode_msm7(const uint8_t buff[], rtcm_msm_message *msg) {
 
   if (msg_num == 1019) {
     msg_eph->constellation = CONSTELLATION_GPS;
+    return decode_gps_eph(buff,&bit,msg_eph);
   } else if (msg_num == 1020) {
     msg_eph->constellation = CONSTELLATION_GLO;
+    return decode_glo_eph(buff,&bit,msg_eph);
   } else if (msg_num == 1042) {
     msg_eph->constellation = CONSTELLATION_BDS2;
+    //return decode_bds_eph(buff,&bit,msg_eph);
   } else if (msg_num == 1045) {
     msg_eph->constellation = CONSTELLATION_GAL;
-  } else {
-    return RC_MESSAGE_TYPE_MISMATCH;
+    //return decode_gal_eph(buff,&bit,msg_eph);
   }
-
-  msg_eph->sat_id = getbitu(buff, bit, 6);
-  bit += 6;
-  msg_eph->wn = getbitu(buff, bit, 10);
-  bit += 10;
-  msg_eph->ura = getbitu(buff, bit, 4);
-  bit += 4;
-  /*uint8_t l2_code = */ getbitu(buff, bit, 2);
-  bit += 2;
-  msg_eph->kepler.inc_dot = getbits(buff, bit, 14);
-  bit += 14;
-  msg_eph->kepler.iode = getbitu(buff, bit, 8);
-  bit += 8;
-  msg_eph->kepler.toc = getbitu(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.af2 = getbits(buff, bit, 8);
-  bit += 8;
-  msg_eph->kepler.af1 = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.af0 = getbits(buff, bit, 22);
-  bit += 22;
-  msg_eph->kepler.iodc = getbitu(buff, bit, 10);
-  bit += 10;
-  msg_eph->kepler.crs = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.dn = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.m0 = getbits(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.cuc = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.ecc = getbitu(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.cus = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.sqrta = getbitu(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.toc = getbitu(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.cic = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.omega0 = getbits(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.cis = getbits(buff, bit, 16);
-  bit += 16;
-  msg_eph->kepler.inc = getbits(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.crc = getbits(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.w = getbits(buff, bit, 32);
-  bit += 32;
-  msg_eph->kepler.omegadot = getbits(buff, bit, 24);
-  bit += 24;
-  msg_eph->kepler.tgd_gps_s = getbits(buff, bit, 8);
-  bit += 8;
-  msg_eph->health_bits = getbitu(buff, bit, 6);
-  bit += 6;
-  /* L2 data bit */ getbitu(buff, bit, 1);
-  bit += 1;
-  msg_eph->fit_interval = getbitu(buff, bit, 1);
-  bit += 1;
-
-  return RC_OK;
-  }
+  return RC_MESSAGE_TYPE_MISMATCH;
+}
