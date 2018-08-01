@@ -298,17 +298,17 @@ typedef struct {
 
 /** Structure containing the GLONASS ephemeris for one satellite. */
 typedef struct {
-  double gamma;  /**< Relative deviation of predicted carrier frequency
+  int16_t gamma;  /**< Relative deviation of predicted carrier frequency
                       from nominal value, dimensionless */
-  double tau;    /**< Correction to the SV time [s]*/
-  double d_tau;  /**< Equipment delay between L1 and L2 [s] */
-  double pos[3]; /**< Position of the SV at tb in PZ-90.02 coordinates
+  int32_t tau;    /**< Correction to the SV time [s]*/
+  int8_t d_tau;  /**< Equipment delay between L1 and L2 [s] */
+  int32_t pos[3]; /**< Position of the SV at tb in PZ-90.02 coordinates
                       system [m] */
-  double vel[3]; /**< Velocity vector of the SV at tb in PZ-90.02
+  int32_t vel[3]; /**< Velocity vector of the SV at tb in PZ-90.02
                       coordinates system [m/s] */
-  double acc[3]; /**< Acceleration vector of the SV at tb in PZ-90.02
+  int32_t acc[3]; /**< Acceleration vector of the SV at tb in PZ-90.02
                       coordinates system [m/s^2] */
-  uint16_t fcn;       /**< Frequency slot associated with the GLO SV */
+  uint8_t fcn;       /**< Frequency slot associated with the GLO SV */
   uint8_t iod;        /**< Issue of ephemeris data */
 } ephemeris_glo_t;
 
