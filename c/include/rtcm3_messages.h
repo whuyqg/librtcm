@@ -317,6 +317,7 @@ typedef struct {
   uint8_t sat_id;       /**< Signal ID. */
   constellation_t constellation; /**< Constellation > */
   uint16_t wn;       /**< Reference wn of ephemeris */
+  uint16_t toe;      /**< Reference time of ephemeris */
   uint16_t ura;         /**< User range accuracy [m] */
   uint32_t fit_interval;  /**< Curve fit interval [s] */
   uint8_t valid;          /**< Ephemeris is valid. */

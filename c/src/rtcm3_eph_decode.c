@@ -34,7 +34,7 @@ rtcm3_rc decode_gps_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 14;
   msg_eph->kepler.iode = getbitu(buff, *bit, 8);
   *bit += 8;
-  msg_eph->kepler.toc = getbitu(buff, *bit, 16);
+  msg_eph->toe = getbitu(buff, *bit, 16);
   *bit += 16;
   msg_eph->kepler.af2 = getbits(buff, *bit, 8);
   *bit += 8;
@@ -171,7 +171,7 @@ rtcm3_rc decode_glo_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   return RC_OK;
 }
 
-/** Decode an RTCMv3 BDS Ephemeris Message
+/** Decode an RTCMv3 GAL Ephemeris Message
  *
  * \param buff The input data buffer
  * \param RTCM message struct
@@ -179,7 +179,7 @@ rtcm3_rc decode_glo_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
  *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  *          - RC_INVALID_MESSAGE : Cell mask too large or invalid TOW
  */
-rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph) {
+rtcm3_rc decode_gal_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph) {
   msg_eph->sat_id = getbitu(buff, *bit, 6);
   *bit += 6;
   msg_eph->wn = getbitu(buff, *bit, 13);
@@ -214,7 +214,7 @@ rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 18;
   msg_eph->kepler.sqrta = getbitu(buff, *bit, 32);
   *bit += 32;
-  msg_eph->kepler.toe = getbitu(buff, *bit, 17);
+  msg_eph->toe = getbitu(buff, *bit, 17);
   *bit += 17;
   msg_eph->kepler.cic = getbits(buff, *bit, 18);
   *bit += 18;
@@ -226,7 +226,7 @@ rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 32;
   msg_eph->kepler.crc = getbits(buff, *bit, 18);
   *bit += 18;
-  msg_eph->kepler.omega = getbits(buff, *bit, 32);
+  msg_eph->kepler.w = getbits(buff, *bit, 32);
   *bit += 32;
   msg_eph->kepler.omegadot = getbits(buff, *bit, 24);
   *bit += 24;
@@ -272,7 +272,7 @@ rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 16;
   msg_eph->kepler.sqrta = getbitu(buff, *bit, 32);
   *bit += 32;
-  msg_eph->kepler.toe = getbitu(buff, *bit, 14);
+  msg_eph->toe = getbitu(buff, *bit, 14);
   *bit += 14;
   msg_eph->kepler.cic = getbits(buff, *bit, 16);
   *bit += 16;
@@ -284,7 +284,7 @@ rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_e
   *bit += 32;
   msg_eph->kepler.crc = getbits(buff, *bit, 16);
   *bit += 16;
-  msg_eph->kepler.omega = getbits(buff, *bit, 32);
+  msg_eph->kepler.w = getbits(buff, *bit, 32);
   *bit += 32;
   msg_eph->kepler.omegadot = getbits(buff, *bit, 24);
   *bit += 24;
