@@ -302,6 +302,7 @@ typedef struct {
                       from nominal value, dimensionless */
   int32_t tau;    /**< Correction to the SV time [s]*/
   int8_t d_tau;  /**< Equipment delay between L1 and L2 [s] */
+  uint8_t t_b;
   int32_t pos[3]; /**< Position of the SV at tb in PZ-90.02 coordinates
                       system [m] */
   int32_t vel[3]; /**< Velocity vector of the SV at tb in PZ-90.02

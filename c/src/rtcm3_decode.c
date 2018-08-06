@@ -1282,32 +1282,3 @@ rtcm3_rc rtcm3_decode_msm6(const uint8_t buff[],
 rtcm3_rc rtcm3_decode_msm7(const uint8_t buff[], rtcm_msm_message *msg) {
   return rtcm3_decode_msm_internal(buff, MSM7, NULL, msg);
 }
-
-/** Decode an RTCMv3 Ephemeris Message
- *
- * \param buff The input data buffer
- * \param RTCM message struct
- * \return  - RC_OK : Success
- *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
- *          - RC_INVALID_MESSAGE : Cell mask too large or invalid TOW
- */
- rtcm3_rc rtcm3_decode_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
-  uint16_t bit = 0;
-  uint16_t msg_num = getbitu(buff, bit, 12);
-  bit += 12;
-
-  if (msg_num == 1019) {
-    msg_eph->constellation = CONSTELLATION_GPS;
-    return decode_gps_eph(buff,&bit,msg_eph);
-  } else if (msg_num == 1020) {
-    msg_eph->constellation = CONSTELLATION_GLO;
-    return decode_glo_eph(buff,&bit,msg_eph);
-  } else if (msg_num == 1042) {
-    msg_eph->constellation = CONSTELLATION_BDS2;
-    //return decode_bds_eph(buff,&bit,msg_eph);
-  } else if (msg_num == 1045) {
-    msg_eph->constellation = CONSTELLATION_GAL;
-    //return decode_gal_eph(buff,&bit,msg_eph);
-  }
-  return RC_MESSAGE_TYPE_MISMATCH;
-}

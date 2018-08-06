@@ -15,7 +15,7 @@
 
 #include "rtcm3_messages.h"
 
-rtcm3_rc decode_gps_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph);
-rtcm3_rc decode_glo_eph(const uint8_t buff[], uint16_t *bit, rtcm_msg_eph *msg_eph);
+rtcm3_rc rtcm3_decode_gps_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph);
+rtcm3_rc rtcm3_decode_glo_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph);
 
 #endif /* SWIFTNAV_RTCM3_EPH_DECODE_H */
