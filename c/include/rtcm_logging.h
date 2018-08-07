@@ -13,10 +13,6 @@
 #ifndef LIBRTCM_LOGGING_H
 #define LIBRTCM_LOGGING_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #ifdef LIBRTCM_LOG_INTERNAL
@@ -38,9 +34,5 @@ typedef void (*rtcm_log_callback)(uint8_t level, uint8_t *msg, uint16_t len, voi
 
 void rtcm_init_logging(rtcm_log_callback callback, void *context);
 void rtcm_log(uint8_t level, uint8_t *msg, uint16_t len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* LIBRTCM_LOGGING_H */
