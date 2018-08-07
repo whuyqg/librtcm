@@ -191,7 +191,13 @@ rtcm3_rc rtcm3_decode_glo_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
  *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  *          - RC_INVALID_MESSAGE : Cell mask too large or invalid TOW
  */
-rtcm3_rc decode_gal_eph(const uint8_t buff[], uint16_t bit, rtcm_msg_eph *msg_eph) {
+rtcm3_rc decode_gal_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
+  uint16_t bit = 0;
+  uint16_t msg_num = getbitu(buff, bit, 12);
+  if(msg_num != 1045) {
+    return RC_MESSAGE_TYPE_MISMATCH;
+  }
+  bit += 12;
   msg_eph->sat_id = getbitu(buff, bit, 6);
   bit += 6;
   msg_eph->wn = getbitu(buff, bit, 13);
@@ -252,6 +258,12 @@ rtcm3_rc decode_gal_eph(const uint8_t buff[], uint16_t bit, rtcm_msg_eph *msg_ep
 }
 
 rtcm3_rc decode_bds_eph(const uint8_t buff[], uint16_t bit, rtcm_msg_eph *msg_eph) {
+  uint16_t bit = 0;
+  uint16_t msg_num = getbitu(buff, bit, 12);
+  if(msg_num != 1042) {
+    return RC_MESSAGE_TYPE_MISMATCH;
+  }
+  bit += 12;
   msg_eph->sat_id = getbitu(buff, bit, 6);
   bit += 6;
   msg_eph->wn = getbitu(buff, bit, 13);
