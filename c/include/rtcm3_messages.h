@@ -249,84 +249,71 @@ typedef struct {
 
 typedef struct {
   union {
-    int8_t tgd_gps_s;    /**< GPS TGD  */
-    double tgd_qzss_s;   /**< QZSS TGD */
-    double tgd_bds_s[2]; /**< tgd_bds_s[0] = BDS TGD1,
-                              tgd_bds_s[1] = BDS TGD2 */
-    double tgd_gal_s[2]; /**< tgd_gal_s[0] = GAL E5a/E1 BGD,
-                              tgd_gal_s[1] = GAL E5b/E1 BGD*/
+    int8_t tgd_gps_s;
+    double tgd_qzss_s;
+    double tgd_bds_s[2];
+    double tgd_gal_s[2];
   };
-  int32_t crc;      /**< Amplitude of the cosine harmonic correction term
-                        to the orbit radius [m] */
-  int16_t crs;      /**< Amplitude of the sine harmonic correction term
-                        to the orbit radius [m] */
-  int16_t cuc;      /**< Amplitude of the cosine harmonic correction term
-                        to the argument of latitude [rad] */
-  int16_t cus;      /**< Amplitude of the sine harmonic correction term
-                        to the argument of latitude [rad] */
-  int16_t cic;      /**< Amplitude of the cosine harmonic correction term
-                        to the angle of inclination [rad] */
-  int16_t cis;      /**< Amplitude of the sine harmonic correction term
-                        to the angle of inclination [rad] */
-  int16_t dn;       /**< Mean motion difference from computed value
-                        [semi-circles/s] */
-  int32_t m0;       /**< Mean anomaly at reference time [semi-circles] */
-  uint32_t ecc;      /**< Eccentricity, dimensionless */
-  uint32_t sqrta;    /**< Square root of the semi-major axis [sqrt(m)] */
-  int32_t omega0;   /**< Longitude of ascending node
-                        of orbit plane at weekly epoch [semi-circles] */
-  int32_t omegadot; /**< Rate of right ascension [semi-circles/s] */
-  int32_t w;        /**< Argument of perigee [semi-circles] */
-  int32_t inc;      /**< Inclindation angle at reference time [semi-circles] */
-  int16_t inc_dot;  /**< Rate of inclination angle [semi-circles/s] */
-  int32_t af0;      /**< Time offset of the sat clock [s] **/
-  int16_t af1;      /**< Drift of the sat clock [s/s] **/
-  int8_t af2;      /**< Acceleration of the sat clock [s/s^2] **/
-  uint16_t toc;  /**< Reference time of clock. */
-  uint16_t iodc;        /**< Issue of data clock. */
-  uint16_t iode;        /**< Issue of data ephemeris. */
+  int32_t crc;
+  int16_t crs;
+  int16_t cuc;
+  int16_t cus;
+  int16_t cic;
+  int16_t cis;
+  int16_t dn;
+  int32_t m0;
+  uint32_t ecc;
+  uint32_t sqrta;
+  int32_t omega0;
+  int32_t omegadot;
+  int32_t w;
+  int32_t inc;
+  int16_t inc_dot;
+  int32_t af0;
+  int16_t af1;
+  int8_t af2;
+  uint16_t toc;
+  uint16_t iodc;
+  uint16_t iode;
 } ephemeris_kepler_t;
 
 /** Structure containing the SBAS ephemeris for one satellite. */
 typedef struct {
-  double pos[3]; /**< Position of the GEO at time toe [m] */
-  double vel[3]; /**< velocity of the GEO at time toe [m/s] */
-  double acc[3]; /**< velocity of the GEO at time toe [m/s^2] */
-  double a_gf0;  /**< Time offset of the GEO clock w.r.t. SNT [s] */
-  double a_gf1;  /**< Drift of the GEO clock w.r.t. SNT [s/s] */
+  double pos[3];
+  double vel[3];
+  double acc[3];
+  double a_gf0;
+  double a_gf1;
 } ephemeris_xyz_t;
 
 /** Structure containing the GLONASS ephemeris for one satellite. */
 typedef struct {
-  int16_t gamma;  /**< Relative deviation of predicted carrier frequency
-                      from nominal value, dimensionless */
-  int32_t tau;    /**< Correction to the SV time [s]*/
-  int8_t d_tau;  /**< Equipment delay between L1 and L2 [s] */
+  int16_t gamma;
+  int32_t tau;
+  int8_t d_tau;
   uint8_t t_b;
-  int32_t pos[3]; /**< Position of the SV at tb in PZ-90.02 coordinates
-                      system [m] */
-  int32_t vel[3]; /**< Velocity vector of the SV at tb in PZ-90.02
-                      coordinates system [m/s] */
-  int32_t acc[3]; /**< Acceleration vector of the SV at tb in PZ-90.02
-                      coordinates system [m/s^2] */
-  uint8_t fcn;       /**< Frequency slot associated with the GLO SV */
-  uint8_t iod;        /**< Issue of ephemeris data */
+  int32_t pos[3];
+  int32_t vel[3];
+  int32_t acc[3];
+
+  uint8_t fcn;
+  uint8_t iod;
 } ephemeris_glo_t;
 
 /** Structure containing the ephemeris for one satellite. */
 typedef struct {
-  uint8_t sat_id;       /**< Signal ID. */
-  constellation_t constellation; /**< Constellation > */
-  uint16_t wn;       /**< Reference wn of ephemeris */
-  uint16_t toe;      /**< Reference time of ephemeris */
-  uint16_t ura;         /**< User range accuracy [m] */
-  uint32_t fit_interval;  /**< Curve fit interval [s] */
-  uint8_t valid;          /**< Ephemeris is valid. */
-  uint8_t health_bits;    /**< Satellite health status. */
+  uint8_t sat_id;
+  constellation_t constellation;
+  uint16_t wn;
+  uint16_t toe;
+  uint16_t ura;
+  uint32_t fit_interval;
+  uint8_t valid;
+  uint8_t health_bits;
   union {
-    ephemeris_kepler_t kepler; /**< Parameters specific to GPS. */
-    ephemeris_xyz_t xyz;       /**< Parameters specific to SBAS. */
-    ephemeris_glo_t glo;       /**< Parameters specific to GLONASS. */
+    ephemeris_kepler_t kepler;
+    ephemeris_xyz_t xyz;
+    ephemeris_glo_t glo;
   };
 } rtcm_msg_eph;
 
