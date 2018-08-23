@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#include "rtcm3_messages.h"
+#include <rtcm/rtcm3_messages.h>
 
 bool msm_signal_frequency(const rtcm_msm_header *header,
                           const uint8_t signal_index,

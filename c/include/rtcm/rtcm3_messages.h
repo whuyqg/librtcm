@@ -13,9 +13,9 @@
 #ifndef PIKSI_BUILDROOT_RTCM3_MESSAGES_H_H
 #define PIKSI_BUILDROOT_RTCM3_MESSAGES_H_H
 
-#include <constants.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <rtcm/constants.h>
 
 typedef enum { L1_FREQ, L2_FREQ, NUM_FREQS } freq_enum;
 

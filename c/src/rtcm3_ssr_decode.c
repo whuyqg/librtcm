@@ -10,10 +10,10 @@
  * WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <rtcm3_eph_decode.h>
-#include <rtcm3_msm_utils.h>
 #include <stdio.h>
-#include "bits.h"
+#include <rtcm/rtcm3_eph_decode.h>
+#include <rtcm/rtcm3_msm_utils.h>
+#include <rtcm/bits.h>
 
 /** Get the numbers of bits for the  Epoch Time 1s field
  * \param constellation Message constellation
