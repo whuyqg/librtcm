@@ -263,7 +263,7 @@ typedef struct {
   uint8_t sat_id;
   rtcm_constellation_t constellation;
   uint16_t wn;
-  uint16_t toe;
+  uint32_t toe;
   uint16_t ura;
   uint32_t fit_interval;
   uint8_t valid;
