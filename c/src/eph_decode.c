@@ -199,6 +199,10 @@ rtcm3_rc rtcm3_decode_bds_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
   }
   bit += 12;
   msg_eph->sat_id = rtcm_getbitu(buff, bit, 6);
+  if (msg_eph->sat_id<=5){
+    //We do not support Beidou GEO satellites
+    return RC_INVALID_MESSAGE;
+  }
   bit += 6;
   msg_eph->wn = rtcm_getbitu(buff, bit, 13);
   bit += 13;
