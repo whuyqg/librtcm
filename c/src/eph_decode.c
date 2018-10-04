@@ -199,8 +199,8 @@ rtcm3_rc rtcm3_decode_bds_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
   }
   bit += 12;
   msg_eph->sat_id = rtcm_getbitu(buff, bit, 6);
-  if (msg_eph->sat_id<=5){
-    //We do not support Beidou GEO satellites
+  if (msg_eph->sat_id <= BEIDOU_GEOS_MAX_PRN) {
+    /* We do not support Beidou GEO satellites */
     return RC_INVALID_MESSAGE;
   }
   bit += 6;
@@ -267,7 +267,8 @@ rtcm3_rc rtcm3_decode_bds_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
  * \param msg_eph RTCM message struct
  * \return bit position in the RTCM frame
  */
-static uint16_t rtcm3_decode_gal_eph_common(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
+static uint16_t rtcm3_decode_gal_eph_common(const uint8_t buff[],
+                                            rtcm_msg_eph *msg_eph) {
   uint16_t bit = 12;
   msg_eph->sat_id = rtcm_getbitu(buff, bit, 6);
   bit += 6;
@@ -331,7 +332,7 @@ static uint16_t rtcm3_decode_gal_eph_common(const uint8_t buff[], rtcm_msg_eph *
 rtcm3_rc rtcm3_decode_gal_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
   uint16_t bit = 0;
   uint16_t msg_num = rtcm_getbitu(buff, bit, 12);
-  if(msg_num != 1046) {
+  if (msg_num != 1046) {
     return RC_MESSAGE_TYPE_MISMATCH;
   }
 
@@ -358,10 +359,11 @@ rtcm3_rc rtcm3_decode_gal_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
  *          - RC_MESSAGE_TYPE_MISMATCH : Message type mismatch
  *          - RC_INVALID_MESSAGE : Cell mask too large or invalid TOW
  */
-rtcm3_rc rtcm3_decode_gal_eph_fnav(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
+rtcm3_rc rtcm3_decode_gal_eph_fnav(const uint8_t buff[],
+                                   rtcm_msg_eph *msg_eph) {
   uint16_t bit = 0;
   uint16_t msg_num = rtcm_getbitu(buff, bit, 12);
-  if(msg_num != 1045) {
+  if (msg_num != 1045) {
     return RC_MESSAGE_TYPE_MISMATCH;
   }
 
