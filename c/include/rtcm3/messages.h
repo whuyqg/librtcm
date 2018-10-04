@@ -303,6 +303,7 @@ typedef struct {
 typedef struct {
   uint8_t sat_id;
   uint16_t iode;
+  uint32_t iodcrc;
   int32_t radial;
   int32_t along_track;
   int32_t cross_track;
