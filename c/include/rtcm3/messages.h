@@ -207,10 +207,10 @@ typedef struct {
  */
 typedef struct {
   union {
-    int8_t tgd_gps_s;
-    int8_t tgd_qzss_s;
-    int16_t tgd_bds_s[2];
-    int16_t tgd_gal_s[2];
+	int32_t tgd_gps_s;
+    int32_t tgd_qzss_s;
+    int32_t tgd_bds_s[2];
+    int32_t tgd_gal_s[2];
   };
   int32_t crc;
   int32_t crs;
