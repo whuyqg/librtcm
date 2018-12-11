@@ -373,6 +373,7 @@ rtcm3_rc rtcm3_decode_gal_eph_fnav(const uint8_t buff[],
 
   msg_eph->kepler.tgd_gal_s[0] = rtcm_getbits(buff, bit, 10);
   bit += 10;
+  msg_eph->kepler.tgd_gal_s[1] = 0;
   msg_eph->health_bits = rtcm_getbits(buff, bit, 3);
   bit += 3;
   /* reserved */ rtcm_getbits(buff, bit, 7);
