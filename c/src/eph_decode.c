@@ -257,6 +257,7 @@ rtcm3_rc rtcm3_decode_bds_eph(const uint8_t buff[], rtcm_msg_eph *msg_eph) {
   msg_eph->kepler.tgd_bds_s[1] = rtcm_getbits(buff, bit, 10);
   bit += 10;
   msg_eph->valid = rtcm_getbitu(buff, bit, 1);
+  msg_eph->health_bits = msg_eph->valid;
   bit += 1;
   return RC_OK;
 }
