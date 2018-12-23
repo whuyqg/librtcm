@@ -18,6 +18,9 @@
 #include "rtcm3/eph_decode.h"
 #include "rtcm3/msm_utils.h"
 
+#define LIBRTCM_LOG_INTERNAL
+#include <rtcm3/logging.h>
+
 /* macros for reading rcv/ant descriptor strings */
 #define GET_STR_LEN(TheBuff, TheIdx, TheOutput)   \
   do {                                            \
@@ -560,9 +563,10 @@ rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
   return RC_OK;
 }
 
-rtcm3_rc rtcm3_decode_1005_base(const uint8_t buff[],
-                                rtcm_msg_1005 *msg_1005,
-                                uint16_t *bit) {
+static rtcm3_rc rtcm3_decode_1005_base(const uint8_t buff[],
+                                       rtcm_msg_1005 *msg_1005,
+                                       uint16_t *bit,
+                                       char dbg_msg[static 256]) {
   msg_1005->stn_id = rtcm_getbitu(buff, *bit, 12);
   *bit += 12;
   msg_1005->ITRF = rtcm_getbitu(buff, *bit, 6);
@@ -588,6 +592,23 @@ rtcm3_rc rtcm3_decode_1005_base(const uint8_t buff[],
   msg_1005->arp_z = (double)(rtcm_getbitsl(buff, *bit, 38)) / 10000.0;
   *bit += 38;
 
+  snprintf(dbg_msg, 256, "msg_1005/6: "
+    "stn_id %4d "
+    "ITRF %d "
+    "GPS_ind %d "
+    "GLO_ind %d "
+    "GAL_ind %d "
+    "ref_stn_ind %d "
+    "arp_xyz [%+.5f %+.5f %+.5f] "
+    "osc_ind %d "
+    "quart_cycle_ind %d",
+    msg_1005->stn_id,
+    msg_1005->ITRF,
+    msg_1005->GPS_ind, msg_1005->GAL_ind, msg_1005->GLO_ind,
+    msg_1005->ref_stn_ind,
+    msg_1005->arp_x, msg_1005->arp_y, msg_1005->arp_z,
+    msg_1005->osc_ind, msg_1005->quart_cycle_ind);
+
   return RC_OK;
 }
 
@@ -607,7 +628,11 @@ rtcm3_rc rtcm3_decode_1005(const uint8_t buff[], rtcm_msg_1005 *msg_1005) {
     return RC_MESSAGE_TYPE_MISMATCH;
   }
 
-  return rtcm3_decode_1005_base(buff, msg_1005, &bit);
+  char dbg_msg[256] = {0};
+  rtcm3_rc ret = rtcm3_decode_1005_base(buff, msg_1005, &bit, dbg_msg);
+  rtcm_log(LOG_DEBUG, (uint8_t*) dbg_msg, strlen(dbg_msg));
+
+  return ret;
 }
 
 /** Decode an RTCMv3 message type 1005 (Stationary RTK Reference Station ARP
@@ -627,9 +652,15 @@ rtcm3_rc rtcm3_decode_1006(const uint8_t buff[], rtcm_msg_1006 *msg_1006) {
     return RC_MESSAGE_TYPE_MISMATCH;
   }
 
-  rtcm3_decode_1005_base(buff, &msg_1006->msg_1005, &bit);
+  char dbg_msg[256] = {0};
+  rtcm3_decode_1005_base(buff, &msg_1006->msg_1005, &bit, dbg_msg);
   msg_1006->ant_height = (double)(rtcm_getbitu(buff, bit, 16)) / 10000.0;
-  bit += 16;
+
+  char dbg_pp[64] = {0};
+  snprintf(dbg_pp, 64, " ant_height %.5f", msg_1006->ant_height);
+  strncat(dbg_msg, dbg_pp, 256 - strlen(dbg_msg));
+  rtcm_log(LOG_DEBUG, (uint8_t*) dbg_msg, strlen(dbg_msg));
+
   return RC_OK;
 }
 
@@ -843,10 +874,26 @@ rtcm3_rc rtcm3_decode_1029(const uint8_t buff[], rtcm_msg_1029 *msg_1029) {
 
   msg_1029->utf8_code_units_n = rtcm_getbitu(buff, bit, 8);
   bit += 8;
-  for (uint8_t i = 0; i < msg_1029->utf8_code_units_n; ++i) {
+  uint8_t i;
+  for (i = 0; i < msg_1029->utf8_code_units_n; i++) {
     msg_1029->utf8_code_units[i] = rtcm_getbitu(buff, bit, 8);
     bit += 8;
   }
+  msg_1029->utf8_code_units[i] = '\0';
+
+  char dbg_msg[256] = {0};
+  char *tmp = (char*) msg_1029->utf8_code_units;
+  snprintf(dbg_msg, 256, "msg_1029: "
+    "stn_id %4d "
+    "mjd_num %5d "
+    "utc_sec_of_day %6d "
+    "unicode_chars %d "
+    "utf8_code_units %d \"%s\"",
+    msg_1029->stn_id,
+    msg_1029->mjd_num, msg_1029->utc_sec_of_day,
+    msg_1029->unicode_chars,
+    msg_1029->utf8_code_units_n, tmp);
+  rtcm_log(LOG_DEBUG, (uint8_t*) dbg_msg, strlen(dbg_msg));
 
   return RC_OK;
 }
@@ -896,6 +943,24 @@ rtcm3_rc rtcm3_decode_1033(const uint8_t buff[], rtcm_msg_1033 *msg_1033) {
   GET_STR_LEN(buff, bit, msg_1033->rcv_serial_num_counter);
   GET_STR(
       buff, bit, msg_1033->rcv_serial_num_counter, msg_1033->rcv_serial_num);
+
+  char dbg_msg[256] = {0};
+  snprintf(dbg_msg, 256, "msg_1033: "
+    "stn_id %4d "
+    "ant_des %d \"%s\" "
+    "ant_sid %d "
+    "ant_ser %d \"%s\" "
+    "rcv_des %d \"%s\" "
+    "fw_des %d \"%s\" "
+    "rcv_ser %d \"%s\"",
+    msg_1033->stn_id,
+    msg_1033->ant_descriptor_counter, msg_1033->ant_descriptor,
+    msg_1033->ant_setup_id,
+    msg_1033->ant_serial_num_counter, msg_1033->ant_serial_num,
+    msg_1033->rcv_descriptor_counter, msg_1033->rcv_descriptor,
+    msg_1033->rcv_fw_version_counter, msg_1033->rcv_fw_version,
+    msg_1033->rcv_serial_num_counter, msg_1033->rcv_serial_num);
+  rtcm_log(LOG_DEBUG, (uint8_t*) dbg_msg, strlen(dbg_msg));
 
   return RC_OK;
 }
@@ -948,6 +1013,24 @@ rtcm3_rc rtcm3_decode_1230(const uint8_t buff[], rtcm_msg_1230 *msg_1230) {
   } else {
     msg_1230->L2_P_cpb_meter = 0.0;
   }
+
+  char dbg_msg[256] = {0};
+  snprintf(dbg_msg, 256, "msg_1230: "
+    "stn_id %4d "
+    "bias_indicator %d "
+    "fdma_signal_mask 0x%1x "
+    "L1_OF %.3f "
+    "L1_P %.3f "
+    "L2_OF %.3f "
+    "L2_P %.3f",
+    msg_1230->stn_id,
+    msg_1230->bias_indicator,
+    msg_1230->fdma_signal_mask,
+    msg_1230->L1_CA_cpb_meter,
+    msg_1230->L1_P_cpb_meter,
+    msg_1230->L2_CA_cpb_meter,
+    msg_1230->L2_P_cpb_meter);
+  rtcm_log(LOG_DEBUG, (uint8_t*) dbg_msg, strlen(dbg_msg));
 
   return RC_OK;
 }
