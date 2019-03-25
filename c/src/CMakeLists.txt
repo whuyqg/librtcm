@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8.7)
 
+include(DoubleIncludeGuard)
+DoubleIncludeGuard(rtcm)
+
 # todo: use bits.[ch] from libswiftnav, MAP-605
 set(librtcm_HEADERS
   ${PROJECT_SOURCE_DIR}/include/rtcm3/bits.h
