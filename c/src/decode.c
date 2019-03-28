@@ -312,6 +312,7 @@ uint8_t construct_L1_code(rtcm_freq_data *l1_freq_data,
   if (pr != (int)PR_L1_INVALID) {
     return 1;
   }
+  fprintf(stderr, "Invalid L1 code\n");
   return 0;
 }
 
@@ -323,6 +324,7 @@ uint8_t construct_L1_phase(rtcm_freq_data *l1_freq_data,
   if (phr_pr_diff != (int)CP_INVALID) {
     return 1;
   }
+  fprintf(stderr, "Invalid L1 phase\n");
   return 0;
 }
 
@@ -333,6 +335,7 @@ uint8_t construct_L2_code(rtcm_freq_data *l2_freq_data,
   if (pr != (int)PR_L2_INVALID) {
     return 1;
   }
+  fprintf(stderr, "Invalid L2 code\n");
   return 0;
 }
 
@@ -345,6 +348,7 @@ uint8_t construct_L2_phase(rtcm_freq_data *l2_freq_data,
   if (phr_pr_diff != (int)CP_INVALID) {
     return 1;
   }
+  fprintf(stderr, "Invalid L2 phase\n");
   return 0;
 }
 
@@ -521,6 +525,7 @@ rtcm3_rc rtcm3_decode_1004(const uint8_t buff[], rtcm_obs_message *msg_1004) {
     return RC_INVALID_MESSAGE;
   }
 
+  fprintf(stderr, "Decoded %u GPS sats\n", msg_1004->header.n_sat);
   for (uint8_t i = 0; i < msg_1004->header.n_sat; i++) {
     init_sat_data(&msg_1004->sats[i]);
 
