@@ -1,17 +1,10 @@
-cmake_minimum_required(VERSION 2.8.7)
-
-# todo: use bits.[ch] from libswiftnav, MAP-605
-set(librtcm_HEADERS
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/bits.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/constants.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/messages.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/encode.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/decode.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/eph_decode.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/ssr_decode.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/msm_utils.h
-  ${PROJECT_SOURCE_DIR}/include/rtcm3/logging.h
-  )
+set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+set(include_install_dir "${CMAKE_INSTALL_INCLUDEDIR}")
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets.cmake")
+set(namespace "${PROJECT_NAME}::")
 
 add_library(rtcm
   decode.c
@@ -22,10 +15,15 @@ add_library(rtcm
   bits.c
   logging.c
   )
+add_library(${namespace}rtcm ALIAS rtcm)
 
+target_include_directories(rtcm 
+    PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+    )
 target_link_libraries(rtcm m)
-target_include_directories(rtcm PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
+if(MSVC)
+else()
 target_compile_options(rtcm PRIVATE "-Wall")
 target_compile_options(rtcm PRIVATE "-Wextra")
 target_compile_options(rtcm PRIVATE "-Werror")
@@ -49,6 +47,39 @@ target_compile_options(rtcm PRIVATE "-fPIC")
 if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 5.0)
    target_compile_options(rtcm PRIVATE "-Wfloat-conversion")
 endif()
+endif()
 
-install(TARGETS rtcm DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
-install(FILES ${librtcm_HEADERS} DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/rtcm3)
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file("${version_config}" COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in"
+    "${project_config}"
+    INSTALL_DESTINATION "${config_install_dir}"
+    )
+
+install(
+    TARGETS rtcm
+    EXPORT "${TARGETS_EXPORT_NAME}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    INCLUDES DESTINATION "${include_install_dir}"
+    )
+
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/rtcm3"
+    DESTINATION "${include_install_dir}"
+    )
+
+install(
+    FILES "${project_config}" "${version_config}"
+    DESTINATION "${config_install_dir}"
+    )
+
+install(
+    EXPORT "${TARGETS_EXPORT_NAME}"
+    NAMESPACE "${namespace}"
+    DESTINATION "${config_install_dir}"
+    )
